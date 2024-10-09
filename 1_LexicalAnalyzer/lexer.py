@@ -19,7 +19,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return f'Token({self.type}, {self.value})'
+        return (f'Token({self.type}, {self.value})')
 
 
 
@@ -29,6 +29,8 @@ class Lexer:
         self.position = 0       # for simple string input
         self.line = 1           # for code with multiple lines
         self.column = 1
+        self.hana_keywords = ["함수", "만약에", "아니면", "동안에", "반환", "출력", 
+                                "진실", "거짓", "널", "변수", "결과"]
 
 
     def lookahead(self):
@@ -76,8 +78,8 @@ class Lexer:
         elif char in '(){}[]':
             return Token(TokenType.DELIMITER, char)
         
-        # else:
-        #     return self.handle_identifier(char)
+        else:
+            return self.handle_identifier(char)
 
         return Token(TokenType.ERROR, f"Unexpected character: {char}")
 
@@ -88,7 +90,7 @@ class Lexer:
             char = self.lookahead()
             if char is None or (not char.isdigit() and char != '.'):
                 break
-            value += self.next_char()
+            value += self.lookahead()
         return Token(TokenType.NUMBER, value)
 
 
@@ -99,11 +101,26 @@ class Lexer:
         return Token(TokenType.OPERATOR, value)
     
 
+    def handle_identifier(self, id_src):
+        value = id_src
+        while True:
+            if self.position < len(self.input):
+                char = self.input[self.position]
+            else:
+                char = None
+
+            if char is None or not (char.isalnum() or char == '_'):
+                break
+            value += self.lookahead()
+
+        if value in self.hana_keywords:
+            return Token(TokenType.KEYWORD, value)
+        return Token(TokenType.IDENTIFIER, value)
 
 
 
 def main():
-    test_string = ["만약 임시 < 5", "임시_123 > 1 동안에"]
+    test_string = ["만약에 임시 < 5", "임시_123 > 1 동안에"]
     
     lexer = Lexer()
     
