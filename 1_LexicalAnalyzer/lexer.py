@@ -19,7 +19,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return f'Token({self.type}, {self.value})'
+        return ('Token({}, {})'.format(self.type, self.value))
 
 
 
@@ -33,7 +33,8 @@ class Lexer:
 
     def lookahead(self):
         # reach to the end of the input
-        if self.position >= len(self.input): return None
+        if self.position >= len(self.input): 
+            return None
 
         char = self.input[self.position]
         self.position += 1
@@ -79,7 +80,7 @@ class Lexer:
         # else:
         #     return self.handle_identifier(char)
 
-        return Token(TokenType.ERROR, f"Unexpected character: {char}")
+        return Token(TokenType.ERROR, "Unexpected character: {}".format(char))
 
 
     def handle_digit(self, digit_src):
@@ -103,16 +104,16 @@ class Lexer:
 
 
 def main():
-    test_string = ["만약 임시 < 5", "임시_123 > 1 동안에"]
+    test_string = ["만약 임시 < 5", "(임시_123 > 1) 동안에"]
     
     lexer = Lexer()
     
     for test in test_string:
         tokens = lexer.tokenize(test)
-        print(f"Input: {test}")
+        print("Input: {}".format(test))
         print("Tokens:")
         for token in tokens:
-            print(f"  {token}")
+            print("  {}".format(token))
 
 if __name__ == "__main__":
     main()
