@@ -1,6 +1,7 @@
 import pdb
 import re
 import enum
+import sys
 
 class TokenType:
     KEYWORD = 'KEYWORD'
@@ -120,17 +121,30 @@ class Lexer:
 
 
 
-def main():
-    test_string = ["만약 임시 < 5", "(임시_123 > 1) 동안에"]
+def main(input_file):
+    if len(sys.argv) != 2:
+        print("Usage: python3.11 lexer.py <input_file>")
+        sys.exit(1)
 
-    lexer = Lexer()
-    
-    for test in test_string:
-        tokens = lexer.tokenize(test)
-        print("Input: {}".format(test))
-        print("Tokens:")
+    input_file = sys.argv[1]
+
+    try:
+        with open(input_file, 'r', encoding='utf-8') as f:
+            source_code = f.read()
+
+        # Run the lexer and print tokens
+        # print(source_code)
+        lexer = Lexer()
+        tokens = lexer.tokenize(source_code)
         for token in tokens:
-            print("  {}".format(token))
+            print(token)
+
+    except FileNotFoundError:
+        print("Error: File {} not found.".format(input_file))
+        sys.exit(1)
+    except Exception as e:
+        print("An error occurred: {}".format(e))
+        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])
