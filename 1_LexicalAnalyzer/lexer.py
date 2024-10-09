@@ -30,7 +30,8 @@ class Lexer:
         self.position = 0       # for simple string input
         self.line = 1           # for code with multiple lines
         self.column = 1
-        self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널", "변수", "결과"]
+        self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널"]
+        self.hana_logical = ["그리고", "이거나"]
 
 
     def lookahead(self):
@@ -74,7 +75,10 @@ class Lexer:
             return self.handle_digit(char)
 
         elif char == '"':
-            return self.handle_string()
+            return self.handle_string(char)
+        
+        elif char == '#':
+            return self.handle_string(char)
 
         elif char in '+-*=!<>':
             return self.handle_operator(char)
@@ -91,7 +95,11 @@ class Lexer:
     def handle_digit(self, digit_src):
         value = digit_src
         while True:
-            char = self.lookahead()
+            if self.position < len(self.input):
+                char = self.input[self.position]
+            else:
+                char = None
+
             if char is None or (not char.isdigit() and char != '.'):
                 break
             value += self.lookahead()
@@ -105,8 +113,8 @@ class Lexer:
         return Token(TokenType.OPERATOR, value)
     
 
-    def handle_string(self):
-        value = '"'
+    def handle_string(self, str_src):
+        value = str_src
         while True:
             char = self.lookahead()
             if char is None:
@@ -114,6 +122,16 @@ class Lexer:
             value += char
             if char == '"':
                 break
+        return Token(TokenType.STRING, value)
+    
+
+    def handle_comment(self, str_src):
+        value = str_src
+        while self.position < len(self.input):
+            char = self.input[self.position]
+            if char == '\n':
+                break
+            value += self.lookahead()
         return Token(TokenType.STRING, value)
     
 
@@ -131,6 +149,8 @@ class Lexer:
 
         if value in self.hana_keywords:
             return Token(TokenType.KEYWORD, value)
+        elif value in self.hana_logical:
+            return Token(TokenType.OPERATOR, value)
         return Token(TokenType.IDENTIFIER, value)
 
 
@@ -146,7 +166,6 @@ def main(input_file):
         with open(input_file, 'r', encoding='utf-8') as f:
             source_code = f.read()
 
-        # Run the lexer and print tokens
         # print(source_code)
         lexer = Lexer()
         tokens = lexer.tokenize(source_code)
@@ -159,6 +178,8 @@ def main(input_file):
     except Exception as e:
         print("An error occurred: {}".format(e))
         sys.exit(1)
+
+
 
 if __name__ == "__main__":
     main(sys.argv[1])

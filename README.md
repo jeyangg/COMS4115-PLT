@@ -48,7 +48,8 @@ Only allow int and float (traditional mathematical multiplication and division)
 Division: quotient remain and remainder is removed
 - Modulo 
 Modulo (%) returns the division’s remainder. Only use int. 
-#### Boolean/Equivalence Operators (<, >, <=, >=, !=, ==)
+#### Boolean/Equivalence Operators: <, >, <=, >=, !=, ==
+#### Logical Operators: `그리고` (&&, and), `이거나` (|, or)
 
 ### 5. **Delimiter Tokens**
 - `(`: Open Parenthesis
