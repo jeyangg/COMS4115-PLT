@@ -1,5 +1,5 @@
 # COMS4115-PLT
-Hana - Language for translating all syntax and commands are expressed in the Korean language to C style code
+Hana - Language for translating all syntax and commands are expressed in the Korean language to Python style code
 
 ## Token Types
 
@@ -61,15 +61,15 @@ Modulo (%) returns the division’s remainder. Only use int.
 
 **Regex Rule**: `[\(\)\{\},:;]`
 
-6. **Comments/String Tokens**:
-   - Comment Tokens:
+### 6. **Comments/String Tokens**
+- Comment Tokens:
 Single-line Comments: In Hana, comments can start with a hash # (similar to Python).
 Everything following # on that line is ignored by the interpreter.
 Pattern: #.* (matches everything after # to the end of the line).
-   - String Tokens:
+- String Tokens:
 String Literals: Strings are enclosed in double quotes ("). All characters within the quotes are considered part of the string until the closing quote.
 Pattern: "(?:[^"\\]|\\.)*" (matches any sequence of characters between double quotes, allowing escaped characters like \").
 
-7. **Number Tokens**:  
-   - Integer: Sequence of digits: '[0-9]+'
-   - Float: Sequence of digits, decimal point, sequence of digits: '[0-9]+.[0-9]+'
+### 7. **Number Tokens**
+- Integer: Sequence of digits: '[0-9]+'
+- Float: Sequence of digits, decimal point, sequence of digits: '[0-9]+.[0-9]+'

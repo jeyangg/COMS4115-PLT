@@ -30,8 +30,7 @@ class Lexer:
         self.position = 0       # for simple string input
         self.line = 1           # for code with multiple lines
         self.column = 1
-        self.hana_keywords = ["함수", "만약에", "아니면", "동안에", "반환", "출력", 
-                                "진실", "거짓", "널", "변수", "결과"]
+        self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널", "변수", "결과"]
 
 
     def lookahead(self):
@@ -74,6 +73,9 @@ class Lexer:
         elif char.isdigit():
             return self.handle_digit(char)
 
+        elif char == '"':
+            return self.handle_string()
+
         elif char in '+-*=!<>':
             return self.handle_operator(char)
 
@@ -101,6 +103,18 @@ class Lexer:
         if op_src in '=!<>':
             value += self.lookahead()
         return Token(TokenType.OPERATOR, value)
+    
+
+    def handle_string(self):
+        value = '"'
+        while True:
+            char = self.lookahead()
+            if char is None:
+                return Token(TokenType.ERROR, "Unterminated string")
+            value += char
+            if char == '"':
+                break
+        return Token(TokenType.STRING, value)
     
 
     def handle_identifier(self, id_src):
