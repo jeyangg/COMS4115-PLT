@@ -4,7 +4,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y python3 python3-pip
 
-# Step 6: Set the default command to run your language compiler
 CMD ["python", "lexer.py"]
