@@ -255,7 +255,7 @@ Token(TokenType.ERROR, Unexpected character: ))
     출력("수학 결과: ", 수학_결과)                                // print("math result: ", math_result)
                                                             //
     # '이것은 주석입니다'                                        // # 'This is comment'
-    # -> 이것 또한 주석입니다                                     // # -> This is also comment
+    # -> 이것 또한 주석입니다'                                    // # -> This is also comment'
     문자열_테스트 = "이것은 '문자열'입니다."                         // string_test = "This is 'string'."
     출력("문자열_테스트)                                         // print("string_test)
 }                                                            // }
