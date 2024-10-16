@@ -32,6 +32,7 @@ class Lexer:
         self.column = 1
         self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널"]
         self.hana_logical = ["그리고", "이거나"]
+        self.hana_delimiter = []
 
 
     def lookahead(self):
@@ -84,7 +85,7 @@ class Lexer:
             return self.handle_operator(char)
 
         elif char in '(){}[]':
-            return Token(TokenType.DELIMITER, char)
+            return self.handle_delimiter(char) 
         
         else:
             return self.handle_identifier(char)
@@ -134,6 +135,23 @@ class Lexer:
             value += self.lookahead()
         return Token(TokenType.STRING, value)
     
+    def handle_delimiter(self, delimiter):
+        start_column = self.column - 1
+        if delimiter in '({[':
+            self.hana_delimiter.append((delimiter, self.line, start_column))
+        elif delimiter in ')}]':
+            if self.hana_delimiter:
+                last_delimiter = self.hana_delimiter[-1][0]
+                if (last_delimiter == '(' and delimiter == ')') or \
+                   (last_delimiter == '{' and delimiter == '}') or \
+                   (last_delimiter == '[' and delimiter == ']'):
+                    self.hana_delimiter.pop()
+                else:
+                    return Token(TokenType.ERROR, f"Mismatched delimiter: expected closing {last_delimiter}, found {delimiter}")
+            else:
+                return Token(TokenType.ERROR, f"Unmatched closing delimiter: {delimiter}")
+        return Token(TokenType.DELIMITER, delimiter)
+
 
     def handle_identifier(self, id_src):
         value = id_src
