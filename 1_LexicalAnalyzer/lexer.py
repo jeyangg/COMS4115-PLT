@@ -41,6 +41,9 @@ class Lexer:
         self.column = 1
         self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널"]
         self.hana_logical = ["그리고", "이거나"]
+        self.hana_list = ["배열", "길이", "추가", "뽑기"]
+        self.hana_dictionary = ["딕셔너리", "키", "아이템"]
+        self.hana_math = ["랜덤", "절댓값"]
         self.hana_delimiter = []
 
 
@@ -96,7 +99,7 @@ class Lexer:
             elif char == '#':
                 self.transition_state(LexerState.IN_STRING)
                 return self.handle_comment(char)
-            elif char in '+-*=!<>%':
+            elif char in '+-*=!<>%/':
                 self.transition_state(LexerState.IN_OPERATOR)
                 return self.handle_operator(char)
             elif char in '(){}[],:.':
@@ -123,33 +126,33 @@ class Lexer:
             self.transition_state(LexerState.START)
             return self.handle_delimiter(char)
         
-
         self.transition_state(LexerState.ERROR)
         return Token(TokenType.ERROR, "Unexpected character: {}".format(char))
 
+
     def handle_digit(self, digit_src):
         value = digit_src
-        dot_encountered = False  
-        
+        dot_encountered = False
+        is_error = False  # Flag to indicate if there's an error in the digit sequence
+
         while True:
             if self.position < len(self.input):
                 char = self.input[self.position]
             else:
                 char = None
-            
+
             if char is None:
                 break
 
             if char == '.' and not dot_encountered:
                 dot_encountered = True
-                self.position += 1  
-                # Peek ahead to check if another dot follows
+                self.position += 1
                 next_char = self.input[self.position] if self.position < len(self.input) else None
-                if next_char == '.':  # If another dot follows, treat both dots as separate tokens
+                if next_char == '.':
                     self.transition_state(LexerState.START)
-                    self.position-=1
+                    self.position -= 1
                     return Token(TokenType.NUMBER, value)
-                elif next_char.isdigit():  # Valid float
+                elif next_char.isdigit():
                     value += '.'
                 else:
                     self.transition_state(LexerState.START)
@@ -157,11 +160,18 @@ class Lexer:
             elif char == '.' and dot_encountered:
                 self.transition_state(LexerState.START)
                 return Token(TokenType.NUMBER, value)
-            elif char.isdigit():  
-                value += self.lookahead()  
-            else:  
+            elif char.isdigit():
+                value += self.lookahead()
+            elif char.isalpha():
+                value += self.lookahead()
+                is_error = True  # Mark this as an error since a digit was followed by a letter
+            else:
                 self.transition_state(LexerState.START)
                 break
+
+        if is_error:
+            self.transition_state(LexerState.ERROR)
+            return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
 
         return Token(TokenType.NUMBER, value)
 
@@ -169,7 +179,7 @@ class Lexer:
     def handle_operator(self, op_src):
         value = op_src
         next_char = self.lookahead()
-        if next_char is not None and next_char in '=<>': 
+        if next_char is not None and next_char in '=<>*': 
             value += next_char
         self.transition_state(LexerState.START)
         return Token(TokenType.OPERATOR, value)
@@ -213,8 +223,11 @@ class Lexer:
         self.transition_state(LexerState.START)
         return Token(TokenType.DELIMITER, delimiter)
     
+
     def handle_identifier(self, id_src):
         value = id_src
+        is_error = False  # Flag to indicate if there's an error in the identifier
+
         while True:
             if self.position < len(self.input):
                 char = self.input[self.position]
@@ -224,12 +237,20 @@ class Lexer:
             if char is None or not (char.isalnum() or char == '_'):
                 self.transition_state(LexerState.START)
                 break
+
+            # Check if a digit immediately follows a Korean character, which should raise an error
+            if char.isdigit() and not value[-1].isdigit() and not value[-1] == '_':
+                is_error = True  # Mark this as an error
             value += self.lookahead()
-        
-        if value in self.hana_keywords:
+
+        if is_error:
+            self.transition_state(LexerState.ERROR)
+            return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
+
+        # Check if the identifier is a keyword or falls into other predefined categories
+        if value in self.hana_keywords + self.hana_list + self.hana_dictionary + self.hana_math + self.hana_logical:
             return Token(TokenType.KEYWORD, value)
-        elif value in self.hana_logical:
-            return Token(TokenType.OPERATOR, value)
+
         return Token(TokenType.IDENTIFIER, value)
 
 
