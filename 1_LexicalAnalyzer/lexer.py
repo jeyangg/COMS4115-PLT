@@ -41,9 +41,9 @@ class Lexer:
         self.column = 1
         self.hana_keywords = ["함수", "만약에", "만약", "아니면", "동안에", "반환", "출력", "진실", "거짓", "널"]
         self.hana_logical = ["그리고", "이거나"]
-        self.hana_list = ["배열", "길이", "추가", "뽑기"]
+        self.hana_list = ["배열", "길이", "추가", "뽑기", "확장", "정렬"]
         self.hana_dictionary = ["딕셔너리", "키", "아이템"]
-        self.hana_math = ["랜덤", "절댓값"]
+        self.hana_math = ["랜덤", "절댓값", "최소값", "최대값"]
         self.hana_delimiter = []
 
 
@@ -248,8 +248,10 @@ class Lexer:
             return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
 
         # Check if the identifier is a keyword or falls into other predefined categories
-        if value in self.hana_keywords + self.hana_list + self.hana_dictionary + self.hana_math + self.hana_logical:
+        if value in self.hana_keywords + self.hana_list + self.hana_dictionary + self.hana_math:
             return Token(TokenType.KEYWORD, value)
+        elif value in self.hana_logical:
+            return Token(TokenType.OPERATOR, value)
 
         return Token(TokenType.IDENTIFIER, value)
 
