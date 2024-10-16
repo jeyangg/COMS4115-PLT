@@ -11,7 +11,6 @@ class LexerState(enum.Enum):
     IN_OPERATOR = 'IN_OPERATOR'
     IN_DELIMITER = 'IN_DELIMITER'
     IN_STRING = 'IN_STRING'
-    IN_COLON = 'IN_COLON'
     ERROR = 'ERROR'
 
 class TokenType(enum.Enum):
@@ -21,7 +20,6 @@ class TokenType(enum.Enum):
     OPERATOR = 'OPERATOR'
     DELIMITER = 'DELIMITER'
     STRING = 'STRING'
-    COLON = 'COLON'
     ERROR = 'ERROR'
 
 
@@ -63,7 +61,7 @@ class Lexer:
 
 
     def transition_state(self, new_state):
-        print("Transitioning from {} to {}".format(self.state, new_state))
+        # print("Transitioning from {} to {}".format(self.state, new_state))
         self.state = new_state
 
 
@@ -82,8 +80,6 @@ class Lexer:
         char = self.lookahead()   
         if char is None:
             return None
-        # else:
-        #     print("tokenize_nxt > char: ", char, type(char), ord(char))
         
         if self.state == LexerState.START:
             if char.isspace():
@@ -99,16 +95,13 @@ class Lexer:
                 return self.handle_string(char)
             elif char == '#':
                 self.transition_state(LexerState.IN_STRING)
-                return self.handle_string(char)
-            elif char in '+-*=!<>':
+                return self.handle_comment(char)
+            elif char in '+-*=!<>%':
                 self.transition_state(LexerState.IN_OPERATOR)
                 return self.handle_operator(char)
-            elif char in '(){}[]':
+            elif char in '(){}[],:.':
                 self.transition_state(LexerState.IN_DELIMITER)
                 return self.handle_delimiter(char) 
-            elif char == ':':
-                self.transition_state(LexerState.START)
-                return Token(TokenType.COLON, char)
             else:
                 self.transition_state(LexerState.ERROR)
                 return Token(TokenType.ERROR, "Unexpected character: {} at line {}, column {}".format(char, self.line, self.column))
@@ -134,28 +127,49 @@ class Lexer:
         self.transition_state(LexerState.ERROR)
         return Token(TokenType.ERROR, "Unexpected character: {}".format(char))
 
-
     def handle_digit(self, digit_src):
         value = digit_src
+        dot_encountered = False  
+        
         while True:
             if self.position < len(self.input):
                 char = self.input[self.position]
             else:
                 char = None
+            
+            if char is None:
+                break
 
-            if char is None or not char.isdigit():
+            if char == '.' and not dot_encountered:
+                dot_encountered = True
+                self.position += 1  
+                # Peek ahead to check if another dot follows
+                next_char = self.input[self.position] if self.position < len(self.input) else None
+                if next_char == '.':  # If another dot follows, treat both dots as separate tokens
+                    self.transition_state(LexerState.START)
+                    self.position-=1
+                    return Token(TokenType.NUMBER, value)
+                elif next_char.isdigit():  # Valid float
+                    value += '.'
+                else:
+                    self.transition_state(LexerState.START)
+                    return Token(TokenType.NUMBER, value)
+            elif char == '.' and dot_encountered:
+                self.transition_state(LexerState.START)
+                return Token(TokenType.NUMBER, value)
+            elif char.isdigit():  
+                value += self.lookahead()  
+            else:  
                 self.transition_state(LexerState.START)
                 break
-            value += self.lookahead()
 
         return Token(TokenType.NUMBER, value)
-
 
 
     def handle_operator(self, op_src):
         value = op_src
         next_char = self.lookahead()
-        if next_char is not None and next_char in '=<>':  # Handle operators like ==, <=, >=
+        if next_char is not None and next_char in '=<>': 
             value += next_char
         self.transition_state(LexerState.START)
         return Token(TokenType.OPERATOR, value)
@@ -179,6 +193,7 @@ class Lexer:
         while self.position < len(self.input):
             char = self.input[self.position]
             if char == '\n':
+                self.transition_state(LexerState.START)
                 break
             value += self.lookahead()
         return Token(TokenType.STRING, value)
@@ -195,14 +210,9 @@ class Lexer:
                    (last_delimiter == '{' and delimiter == '}') or \
                    (last_delimiter == '[' and delimiter == ']'):
                     self.hana_delimiter.pop()
-                else:
-                    return Token(TokenType.ERROR, "Mismatched delimiter: expected closing {}, found {}".format(last_delimiter, delimiter))
-            else:
-                return Token(TokenType.ERROR, "Unmatched closing delimiter: {}".format(delimiter))
         self.transition_state(LexerState.START)
         return Token(TokenType.DELIMITER, delimiter)
-
-
+    
     def handle_identifier(self, id_src):
         value = id_src
         while True:
