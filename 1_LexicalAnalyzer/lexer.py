@@ -3,15 +3,26 @@ import re
 import enum
 import sys
 
-class TokenType:
+class LexerState(enum.Enum):
+    START = 'START'
+    IN_KEYWORD = 'IN_KEYWORD'
+    IN_IDENTIFIER = 'IN_IDENTIFIER'
+    IN_NUMBER = 'IN_NUMBER'
+    IN_OPERATOR = 'IN_OPERATOR'
+    IN_DELIMITER = 'IN_DELIMITER'
+    IN_STRING = 'IN_STRING'
+    IN_COLON = 'IN_COLON'
+    ERROR = 'ERROR'
+
+class TokenType(enum.Enum):
     KEYWORD = 'KEYWORD'
     IDENTIFIER = 'IDENTIFIER'
     NUMBER = 'NUMBER'
     OPERATOR = 'OPERATOR'
     DELIMITER = 'DELIMITER'
     STRING = 'STRING'
+    COLON = 'COLON'
     ERROR = 'ERROR'
-
 
 
 class Token:
@@ -23,9 +34,9 @@ class Token:
         return ('Token({}, {})'.format(self.type, self.value))
 
 
-
 class Lexer:
     def __init__(self):
+        self.state = LexerState.START
         self.input = ""
         self.position = 0       # for simple string input
         self.line = 1           # for code with multiple lines
@@ -51,6 +62,11 @@ class Lexer:
         return char
 
 
+    def transition_state(self, new_state):
+        print("Transitioning from {} to {}".format(self.state, new_state))
+        self.state = new_state
+
+
     def tokenize(self, input_string):
         self.input = input_string
         tokens = []
@@ -68,28 +84,54 @@ class Lexer:
             return None
         # else:
         #     print("tokenize_nxt > char: ", char, type(char), ord(char))
+        
+        if self.state == LexerState.START:
+            if char.isspace():
+                return self.tokenize_nxt()  # Skip whitespace
+            elif char.isdigit():
+                self.transition_state(LexerState.IN_NUMBER)
+                return self.handle_digit(char)
+            elif char.isalpha():
+                self.transition_state(LexerState.IN_IDENTIFIER)
+                return self.handle_identifier(char)
+            elif char == '"':
+                self.transition_state(LexerState.IN_STRING)
+                return self.handle_string(char)
+            elif char == '#':
+                self.transition_state(LexerState.IN_STRING)
+                return self.handle_string(char)
+            elif char in '+-*=!<>':
+                self.transition_state(LexerState.IN_OPERATOR)
+                return self.handle_operator(char)
+            elif char in '(){}[]':
+                self.transition_state(LexerState.IN_DELIMITER)
+                return self.handle_delimiter(char) 
+            elif char == ':':
+                self.transition_state(LexerState.START)
+                return Token(TokenType.COLON, char)
+            else:
+                self.transition_state(LexerState.ERROR)
+                return Token(TokenType.ERROR, "Unexpected character: {} at line {}, column {}".format(char, self.line, self.column))
 
-        if char.isspace():
-            return self.tokenize_nxt()
-
-        elif char.isdigit():
+        elif self.state == LexerState.IN_NUMBER:
             return self.handle_digit(char)
-
-        elif char == '"':
+        
+        elif self.state == LexerState.IN_IDENTIFIER:
+            return self.handle_identifier(char)
+        
+        elif self.state == LexerState.IN_STRING:
             return self.handle_string(char)
         
-        elif char == '#':
-            return self.handle_string(char)
-
-        elif char in '+-*=!<>':
+        elif self.state == LexerState.IN_OPERATOR:
+            self.transition_state(LexerState.START)
             return self.handle_operator(char)
 
-        elif char in '(){}[]':
-            return self.handle_delimiter(char) 
+        elif self.state == LexerState.IN_DELIMITER:
+            self.transition_state(LexerState.START)
+            return self.handle_delimiter(char)
         
-        else:
-            return self.handle_identifier(char)
 
+        self.transition_state(LexerState.ERROR)
         return Token(TokenType.ERROR, "Unexpected character: {}".format(char))
 
 
@@ -101,16 +143,21 @@ class Lexer:
             else:
                 char = None
 
-            if char is None or (not char.isdigit() and char != '.'):
+            if char is None or not char.isdigit():
+                self.transition_state(LexerState.START)
                 break
             value += self.lookahead()
+
         return Token(TokenType.NUMBER, value)
+
 
 
     def handle_operator(self, op_src):
         value = op_src
-        if op_src in '=!<>':
-            value += self.lookahead()
+        next_char = self.lookahead()
+        if next_char is not None and next_char in '=<>':  # Handle operators like ==, <=, >=
+            value += next_char
+        self.transition_state(LexerState.START)
         return Token(TokenType.OPERATOR, value)
     
 
@@ -122,6 +169,7 @@ class Lexer:
                 return Token(TokenType.ERROR, "Unterminated string")
             value += char
             if char == '"':
+                self.transition_state(LexerState.START)
                 break
         return Token(TokenType.STRING, value)
     
@@ -135,6 +183,7 @@ class Lexer:
             value += self.lookahead()
         return Token(TokenType.STRING, value)
     
+    
     def handle_delimiter(self, delimiter):
         start_column = self.column - 1
         if delimiter in '({[':
@@ -147,9 +196,10 @@ class Lexer:
                    (last_delimiter == '[' and delimiter == ']'):
                     self.hana_delimiter.pop()
                 else:
-                    return Token(TokenType.ERROR, f"Mismatched delimiter: expected closing {last_delimiter}, found {delimiter}")
+                    return Token(TokenType.ERROR, "Mismatched delimiter: expected closing {}, found {}".format(last_delimiter, delimiter))
             else:
-                return Token(TokenType.ERROR, f"Unmatched closing delimiter: {delimiter}")
+                return Token(TokenType.ERROR, "Unmatched closing delimiter: {}".format(delimiter))
+        self.transition_state(LexerState.START)
         return Token(TokenType.DELIMITER, delimiter)
 
 
@@ -162,15 +212,15 @@ class Lexer:
                 char = None
 
             if char is None or not (char.isalnum() or char == '_'):
+                self.transition_state(LexerState.START)
                 break
             value += self.lookahead()
-
+        
         if value in self.hana_keywords:
             return Token(TokenType.KEYWORD, value)
         elif value in self.hana_logical:
             return Token(TokenType.OPERATOR, value)
         return Token(TokenType.IDENTIFIER, value)
-
 
 
 def main(input_file):
