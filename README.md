@@ -14,12 +14,16 @@ Hana - Language for translating all syntax and commands are expressed in the Kor
    - `진실` (true)
    - `거짓` (false)
    - `널` (null)
+#### Data Structure
+   - `배열` (Array): `길이` (len()), `추가` (append), `뽑기` (pop), `확장` (extend), `정렬` (sort)
+   - `딕셔너리` (Dictionary): `키` (key()), `아이템` (item())
+#### Math Function
+   - `랜덤` (random)
+   - `절댓값` (abs)
+   - `최소값` (min)
+   - `최대값` (max)
 
-### 2. **Variable Assignment Tokens**  
-   - `변수` (variable)
-   - `결과` (assignment `=`)
-
-### 3. **Identifier Tokens**
+### 2. **Identifier Tokens**
 We are allowing identifiers to consist of valid Hangul characters, digits, and underscores. The digits must precede with an underscore. These identifiers will include Hangul Jamo, Compatibility Jamo, and pre-composed Hangul syllables. The Unicode ranges for each of these types of characters are:
    -  \u1100-\u11FF: Hangul Jamo (used for composing Hangul syllables).
    - \u3130-\u318F: Hangul Compatibility Jamo (used for compatibility with older encodings).
@@ -35,8 +39,8 @@ Valid examples:
 한국어_1_한
 한국어_한_1
 
-### 4. **Operator Tokens**:
-   - '+', '-', '*', '/', '%', '=', '==', '!=', '<', '>', '<=', '>='
+### 3. **Operator Tokens**:
+   - '+', '-', '*', '**', '/', '%', '=', '==', '!=', '<', '>', '<=', '>='
 #### Arithmetic Operators
 - Order of Evaluation
 Arithmetic operators follow the PEMDAS rule. This means parentheses `()` have the highest precedence, followed by multiplication `*`, division `/`, and modulus `%`, which take precedence over addition `+` and subtraction `-`.
@@ -49,9 +53,9 @@ Division: quotient remain and remainder is removed
 - Modulo 
 Modulo (%) returns the division’s remainder. Only use int. 
 #### Boolean/Equivalence Operators: <, >, <=, >=, !=, ==
-#### Logical Operators: `그리고` (&&, and), `이거나` (|, or)
+#### Logical Operators: `그리고` (and), `이거나` (or)
 
-### 5. **Delimiter Tokens**
+### 4. **Delimiter Tokens**
 - `(`: Open Parenthesis
 - `)`: Close Parenthesis
 - `{`: Open Brace
@@ -62,7 +66,7 @@ Modulo (%) returns the division’s remainder. Only use int.
 
 **Regex Rule**: `[\(\)\{\},:;]`
 
-### 6. **Comments/String Tokens**
+### 5. **Comments/String Tokens**
 - Comment Tokens:
 Single-line Comments: In Hana, comments can start with a hash # (similar to Python).
 Everything following # on that line is ignored by the interpreter.
@@ -71,6 +75,6 @@ Pattern: #.* (matches everything after # to the end of the line).
 String Literals: Strings are enclosed in double quotes ("). All characters within the quotes are considered part of the string until the closing quote.
 Pattern: "(?:[^"\\]|\\.)*" (matches any sequence of characters between double quotes, allowing escaped characters like \").
 
-### 7. **Number Tokens**
+### 6. **Number Tokens**
 - Integer: Sequence of digits: '[0-9]+'
 - Float: Sequence of digits, decimal point, sequence of digits: '[0-9]+.[0-9]+'
