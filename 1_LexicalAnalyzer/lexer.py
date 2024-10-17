@@ -170,8 +170,11 @@ class Lexer:
                 break
 
         if is_error:
-            self.transition_state(LexerState.ERROR)
-            return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
+        # syntatic error
+            # self.transition_state(LexerState.ERROR)
+            # return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
+            self.transition_state(LexerState.START)
+            return Token(TokenType.IDENTIFIER, value)
 
         return Token(TokenType.NUMBER, value)
 
@@ -190,7 +193,11 @@ class Lexer:
         while True:
             char = self.lookahead()
             if char is None:
-                return Token(TokenType.ERROR, "Unterminated string")
+            # syntatic error
+                # return Token(TokenType.ERROR, "Unterminated string")
+                self.transition_state(LexerState.START)
+                break
+
             value += char
             if char == '"':
                 self.transition_state(LexerState.START)
@@ -243,9 +250,9 @@ class Lexer:
                 is_error = True  # Mark this as an error
             value += self.lookahead()
 
-        if is_error:
-            self.transition_state(LexerState.ERROR)
-            return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
+        # if is_error:
+        #     self.transition_state(LexerState.ERROR)
+        #     return Token(TokenType.ERROR, "Unexpected identifier pattern: '{}' at line {}, column {}".format(value, self.line, self.column))
 
         # Check if the identifier is a keyword or falls into other predefined categories
         if value in self.hana_keywords + self.hana_list + self.hana_dictionary + self.hana_math:

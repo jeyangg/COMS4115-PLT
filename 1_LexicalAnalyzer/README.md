@@ -4,10 +4,31 @@ by Ella Kim (yk3040) and Je Yang (jy3342)
 ## Implementation Steps
 ### State transition (DFA)
 ### Token Handling
-### Lexical Error Handling
-1. Appearance of illegal characters (backslash, @, $)
-2. Unterminated string except comment
-3. Invalid variable name like starting with number or number following without '_' (Only "한국어_123", "한국어_1_한", and "한국어_한_1" can be accepted)
+- `lookahead`
+    - Get the character of input and track its position (line, column) until we meet the end of the file
+- `handle_digit`
+    - Processe numeric tokens
+    - Possible next state: START, NUMBER (followed by dot), IDENTIFIER (followed by alph)
+- `handle_operator`
+    - Process operator tokens
+    - Possible next state: START
+- `handle_string`
+    - Process string tokens
+    - Possible next state: START (If the string is closed with paired "), STRING
+    - Note that if the opened string is not closed, HANA lexer will keep recognizing the following tokens as a string (Sample 5). 
+- `handle_comment`
+    - Process comment tokens as a string
+    - Possible next state: START (When the comment is finished with "\n"), STRING
+- `handle_delimiter`
+    - Process delimiter tokens
+    - Possible next state: START, DELIMITER
+- `handle_identifier`
+    - Process identifiers and keywords
+    - Possible next state: START, KEYWORD, OPERATOR (logic words), IDENTIFER 
+
+### Lexical Error Handling for Appearance of illegal characters like {backslash, @, $}
+<!-- 2. Unterminated string except comment -->
+<!-- 3. Invalid variable name like starting with number or number following without '_' (Only "한국어_123", "한국어_1_한", and "한국어_한_1" can be accepted) -->
 
 ## Execution
 Ensure you have Python 3.7+ installed on your system.
@@ -202,24 +223,14 @@ Token(TokenType.DELIMITER, .)
 Token(TokenType.KEYWORD, 뽑기)
 Token(TokenType.DELIMITER, ()
 Token(TokenType.DELIMITER, ))
-Token(TokenType.ERROR, Unexpected identifier pattern: '3원소' at line 8, column 4)
-Token(TokenType.ERROR, Unexpected character:  )
-Token(TokenType.ERROR, Unexpected character: =)
-Token(TokenType.ERROR, Unexpected character:  )
-Token(TokenType.ERROR, Unexpected character: 임)
-Token(TokenType.ERROR, Unexpected character: 시)
-Token(TokenType.ERROR, Unexpected character: _)
-Token(TokenType.ERROR, Unexpected character: 1)
-Token(TokenType.ERROR, Unexpected character: _)
-Token(TokenType.ERROR, Unexpected character: 아)
-Token(TokenType.ERROR, Unexpected character: 이)
-Token(TokenType.ERROR, Unexpected character: 디)
-Token(TokenType.ERROR, Unexpected character: .)
-Token(TokenType.ERROR, Unexpected character: 뽑)
-Token(TokenType.ERROR, Unexpected character: 기)
-Token(TokenType.ERROR, Unexpected character: ()
-Token(TokenType.ERROR, Unexpected character: 3)
-Token(TokenType.ERROR, Unexpected character: ))
+Token(TokenType.IDENTIFIER, 3원소)
+Token(TokenType.OPERATOR, =)
+Token(TokenType.IDENTIFIER, 아이디)
+Token(TokenType.DELIMITER, .)
+Token(TokenType.KEYWORD, 뽑기)
+Token(TokenType.DELIMITER, ()
+Token(TokenType.NUMBER, 3)
+Token(TokenType.DELIMITER, ))
 ```
 
 ### Sample 5
@@ -380,5 +391,6 @@ Token(TokenType.OPERATOR, =)
 Token(TokenType.STRING, "이것은 '문자열'입니다.")
 Token(TokenType.KEYWORD, 출력)
 Token(TokenType.DELIMITER, ()
-Token(TokenType.ERROR, Unterminated string)
+Token(TokenType.STRING, "문자열_테스트)
+})
 ```
