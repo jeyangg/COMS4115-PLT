@@ -1,6 +1,6 @@
 # COMS4115-PLT
 Hana - Language for translating all syntax and commands are expressed in the Korean language to Python style code
-
+by Je Yang (jy3342) and Ella Kim (yk3040)
 **Please `cd 1_LexicalAnalyzer` or direct to `1_LexicalAnalyzer` direcotry for Readme on Lexer information.** 
 
 ## Token Types
