@@ -34,7 +34,7 @@ Please refer to the root directory `README.md` for more details on the token typ
    - **Rule**: Any text following a `#` until the end of the line.
 
 ---
-### 2. Scanning Algorithm
+## 2. Scanning Algorithm
 
 Our scanning algorithm is built as a deterministic finite automaton (DFA). The lexer processes the input program one character at a time, and based on the current character and state, it determines the type of token and transitions between states.
 
@@ -169,8 +169,8 @@ Example of an error:
 - `lookahead`
     - Get the character of input and track its position (line, column) until we meet the end of the file
 - `handle_digit`
-    - Processe numeric tokens
-    - Possible next state: START, NUMBER (followed by dot), IDENTIFIER (followed by alph)
+    - Process numeric tokens
+    - Possible next state: START, NUMBER (followed by dot), IDENTIFIER (followed by alpha)
 - `handle_operator`
     - Process operator tokens
     - Possible next state: START
@@ -186,14 +186,13 @@ Example of an error:
     - Possible next state: START, DELIMITER
 - `handle_identifier`
     - Process identifiers and keywords
-    - Possible next state: START, KEYWORD, OPERATOR (logic words), IDENTIFER 
+    - Possible next state: START, KEYWORD, OPERATOR (logic words), IDENTIFIER 
 
-## Execution
-Ensure you have Python 3.7+ installed on your system.
-
-`./run_lexer.sh`
 
 ## 4. Sample Input Programs and Expected Outputs
+## Execution
+Ensure you have Python 3.7+ installed on your system.  `./run_lexer.sh`
+
 ### Sample 1
 **Input file**
 ```
