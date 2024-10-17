@@ -89,7 +89,7 @@ The HANA lexer operates as a DFA, which means it transitions between predefined 
 
 ---
 
-### Detailed State Transition Example
+#### Detailed State Transition Example
 
 For an input like:
 
@@ -141,7 +141,7 @@ Will produce the following output:
 
 ---
 
-### Implementation Steps
+#### Implementation Steps
 
 1. **Read Input Character-by-Character**: The lexer reads the input program one character at a time using the `lookahead` function, keeping track of the current line and column numbers.
 
@@ -190,7 +190,7 @@ Example of an error:
 
 
 ## 4. Sample Input Programs and Expected Outputs
-## Execution
+### Execution
 Ensure you have Python 3.7+ installed on your system.  `./run_lexer.sh`
 
 ### Sample 1
