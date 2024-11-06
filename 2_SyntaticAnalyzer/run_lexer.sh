@@ -11,6 +11,6 @@
 for file in samples/*.txt
 do
     echo "Running lexer on $file"
-    python3 lexer.py "$file"
+    python3 lexer_2.py "$file"
     echo "------------------------------------"
 done
