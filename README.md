@@ -1,6 +1,8 @@
 # COMS4115-PLT
 Hana - Language for translating all syntax and commands are expressed in the Korean language to Python style code
 
+**Please `cd 1_LexicalAnalyzer` or direct to `1_LexicalAnalyzer` direcotry for Readme on Lexer information.** 
+
 ## Token Types
 
 ### 1. **Keyword Tokens**  
@@ -78,3 +80,5 @@ Pattern: "(?:[^"\\]|\\.)*" (matches any sequence of characters between double qu
 ### 6. **Number Tokens**
 - Integer: Sequence of digits: '[0-9]+'
 - Float: Sequence of digits, decimal point, sequence of digits: '[0-9]+.[0-9]+'
+
+Je Yang (jy3342) and Ella Kim (yk3040)
