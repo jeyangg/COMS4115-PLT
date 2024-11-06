@@ -6,12 +6,23 @@ import sys
 import ast_node
 import lexer_2
 
+import ast_node
+import lexer_2
+
+import ast_node
+import lexer_2
+
+import ast_node
+import lexer_2
+
+import ast_node
+import lexer_2
+
 class Parser:
     def __init__(self, source_code):
         self.lexer = lexer_2.Lexer()
         self.tokens = self.lexer.tokenize(source_code)  # Tokenize directly here
         self.position = 0
-
 
     def current_token(self):
         return self.tokens[self.position] if self.position < len(self.tokens) else None
@@ -27,18 +38,25 @@ class Parser:
         else:
             expected_val = expected_value if expected_value else expected_type
             actual_val = token.value if token else 'EOF'
-            raise SyntaxError("Expected {}, got {}".format(expected_val,actual_val))
+            raise SyntaxError("Expected {}, got {}".format(expected_val, actual_val))
 
     def parse(self):
         ast = []
-        print(self.tokens)
         while self.current_token():
-            print("here1")
-            if self.current_token().type == lexer_2.TokenType.KEYWORD and self.current_token().value == "함수":
-                ast.append(self.parse_func_def())
-                print(ast)
+            token = self.current_token()
+            if token.type == lexer_2.TokenType.KEYWORD:
+                if token.value == "함수":
+                    ast.append(self.parse_func_def())
+                elif token.value == "출력":
+                    ast.append(self.parse_print())
+                elif token.value == "만약에":
+                    ast.append(self.parse_if())
+                else:
+                    raise SyntaxError("Unexpected top-level token {}".format(token.value))
+            elif token.type == lexer_2.TokenType.IDENTIFIER:
+                ast.append(self.parse_assign())
             else:
-                raise SyntaxError("Unexpected top-level token {}".format(self.current_token().value))
+                raise SyntaxError("Unexpected top-level token {}".format(token.value))
         return ast
 
     # Parse Expressions
@@ -91,18 +109,22 @@ class Parser:
     # Parse If Statement
     def parse_if(self):
         self.expect(lexer_2.TokenType.KEYWORD, "만약에")
-        self.expect(lexer_2.TokenType.DELIMITER, "(")
-        condition = self.parse_expr()
-        self.expect(lexer_2.TokenType.DELIMITER, ")")
-        self.expect(lexer_2.TokenType.DELIMITER, "{")
+        # Parse the condition directly after "만약에"
+        condition = self.parse_expr()  # Parse the condition
+        self.expect(lexer_2.TokenType.DELIMITER, ":")  # Expect ':' after the condition
+        self.expect(lexer_2.TokenType.DELIMITER, "{")  # Expect '{' to start the body
         body = self.parse_body()
-        self.expect(lexer_2.TokenType.DELIMITER, "}")
+        self.expect(lexer_2.TokenType.DELIMITER, "}")  # Expect '}' to end the body
+        
+        # Handle the optional "아니면" (else) part
         else_body = None
         if self.current_token() and self.current_token().value == "아니면":
             self.advance()
-            self.expect(lexer_2.TokenType.DELIMITER, "{")
+            self.expect(lexer_2.TokenType.DELIMITER, ":")  # Expect ':'
+            self.expect(lexer_2.TokenType.DELIMITER, "{")  # Expect '{' to start the else body
             else_body = self.parse_body()
-            self.expect(lexer_2.TokenType.DELIMITER, "}")
+            self.expect(lexer_2.TokenType.DELIMITER, "}")  # Expect '}' to end the else body
+            
         return ast_node.IfNode(condition, body, else_body)
 
     # Parse Function Definition
@@ -140,11 +162,7 @@ class Parser:
                 self.advance()
                 return ast_node.ReturnNode(self.parse_expr())
             elif token.value == "출력":
-                self.advance()
-                self.expect(lexer_2.TokenType.DELIMITER, "(")
-                expr = self.parse_expr()
-                self.expect(lexer_2.TokenType.DELIMITER, ")")
-                return ast_node.PrintNode(expr)
+                return self.parse_print()
         elif token.type == lexer_2.TokenType.IDENTIFIER:
             return self.parse_assign()
         raise SyntaxError("Unexpected token {}".format(token.value))
@@ -153,14 +171,15 @@ class Parser:
         var = self.expect(lexer_2.TokenType.IDENTIFIER).value
         self.expect(lexer_2.TokenType.OPERATOR, "=")
         expr = self.parse_expr()
-        return ast_node.AssignNode(var, expr)
+        return ast_node.AssignNode(ast_node.IdentifierNode(var), expr)
 
-# def parse(tokens):
-#     print("here0")
-#     parser = Parser(tokens)
-#     print("here111")
-#     ast = parser.parse()
-#     print(ast)
+    def parse_print(self):
+        self.expect(lexer_2.TokenType.KEYWORD, "출력")
+        self.expect(lexer_2.TokenType.DELIMITER, "(")
+        expr = self.parse_expr()
+        self.expect(lexer_2.TokenType.DELIMITER, ")")
+        return ast_node.PrintNode(expr)
+
     
 # Main function to use the Parser class
 def main(input_file):
