@@ -7,9 +7,11 @@ import ast_node
 import lexer_2
 
 class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
+    def __init__(self, source_code):
+        self.lexer = lexer_2.Lexer()
+        self.tokens = self.lexer.tokenize(source_code)  # Tokenize directly here
         self.position = 0
+
 
     def current_token(self):
         return self.tokens[self.position] if self.position < len(self.tokens) else None
@@ -26,6 +28,18 @@ class Parser:
             expected_val = expected_value if expected_value else expected_type
             actual_val = token.value if token else 'EOF'
             raise SyntaxError("Expected {}, got {}".format(expected_val,actual_val))
+
+    def parse(self):
+        ast = []
+        print(self.tokens)
+        while self.current_token():
+            print("here1")
+            if self.current_token().type == lexer_2.TokenType.KEYWORD and self.current_token().value == "함수":
+                ast.append(self.parse_func_def())
+                print(ast)
+            else:
+                raise SyntaxError("Unexpected top-level token {}".format(self.current_token().value))
+        return ast
 
     # Parse Expressions
     def parse_expr(self):
@@ -141,8 +155,40 @@ class Parser:
         expr = self.parse_expr()
         return ast_node.AssignNode(var, expr)
 
-# Main Parsing Function
-def parse(tokens):
-    parser = Parser(tokens)
-    ast = parser.parse_body()  # Starting point for parsing
-    return ast
+# def parse(tokens):
+#     print("here0")
+#     parser = Parser(tokens)
+#     print("here111")
+#     ast = parser.parse()
+#     print(ast)
+    
+# Main function to use the Parser class
+def main(input_file):
+    try:
+        # Read source code from the input file
+        with open(input_file, 'r', encoding='utf-8') as f:
+            source_code = f.read()
+
+        # Initialize the parser with the source code directly
+        parser = Parser(source_code)
+        ast = parser.parse()
+
+        # Print the generated AST
+        print("Generated AST:")
+        print(ast)
+
+    except FileNotFoundError:
+        print("Error: File '{}' not found.".format(input_file))
+        sys.exit(1)
+    except Exception as e:
+        print("An error occurred: {}".format(e))
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: python parser.py <input_file>")
+        sys.exit(1)
+
+    main(sys.argv[1])
