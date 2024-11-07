@@ -210,6 +210,48 @@ class FuncCallNode(ASTNode):
             indent_str
         )
 
+# Dictionary and items
+class DictNode(ASTNode):
+    def __init__(self, name, key=None, value=None):
+        self.name = name
+        self.key = key
+        self.value = value
+
+    def _repr(self, indent):
+        indent_str = "    " * indent
+        return (
+            "{}DictNode(\n"
+            "{}    name={}\n"
+            "{}    keys=[{}]\n"
+            "{}    values=[{}]\n"
+            "{})"
+        ).format(
+            indent_str,
+            indent_str,
+            self.name,
+            indent_str,
+            self.key,
+            indent_str,
+            self.value,
+            indent_str
+        )
+
+class DictAssignNode:
+    def __init__(self, dict, key, value):
+        self.dict = dict
+        self.key = key
+        self.value = value
+
+    def _repr(self, indent):
+        indent_str = "    " * indent
+        return (
+            f"{indent_str}DictAssignNode(\n"
+            f"{indent_str}    dict={self.dict.name},\n"
+            f"{indent_str}    key={self.key},\n"
+            f"{indent_str}    value={self.value}\n"
+            f"{indent_str})"
+        )
+    
 # List and Elements
 class ListNode(ASTNode):
     def __init__(self, elements):

@@ -47,6 +47,8 @@ class Parser:
                     ast.append(self.parse_while())
                 elif token.value == "배열":
                     ast.append(self.parse_array_declaration())
+                elif token.value == "딕셔너리":
+                    ast.append(self.parse_dict_declaration())
                 else:
                     raise SyntaxError("Unexpected top-level token {}".format(token.value))
             elif token.type == lexer_2.TokenType.IDENTIFIER:
@@ -64,6 +66,15 @@ class Parser:
         self.expect(lexer_2.TokenType.DELIMITER, "]")
         return ast_node.ListNode(array_name)
     
+	# Dictionary Declaration Parsing
+    def parse_dict_declaration(self):
+        self.expect(lexer_2.TokenType.KEYWORD, "딕셔너리")
+        array_name = self.expect(lexer_2.TokenType.IDENTIFIER).value
+        self.expect(lexer_2.TokenType.OPERATOR, "=")
+        self.expect(lexer_2.TokenType.DELIMITER, "{")
+        self.expect(lexer_2.TokenType.DELIMITER, "}")
+        return ast_node.DictNode(array_name)
+    
     def parse_method_call(self, list):
         self.expect(lexer_2.TokenType.DELIMITER, ".")
         method = self.expect(lexer_2.TokenType.KEYWORD).value
@@ -76,6 +87,14 @@ class Parser:
                 args.append(self.parse_expr())
         self.expect(lexer_2.TokenType.DELIMITER, ")")
         return ast_node.FuncCallNode(method, args)
+
+    def parse_element_call(self, obj_name):
+        self.expect(lexer_2.TokenType.DELIMITER, "[")
+        index = self.parse_expr()
+        self.expect(lexer_2.TokenType.DELIMITER, "]")
+        self.expect(lexer_2.TokenType.OPERATOR, "=")
+        value = self.parse_expr()
+        return ast_node.DictAssignNode(ast_node.DictNode(obj_name), index, value)
     
     def parse_func_call(self, func_name):
         self.expect(lexer_2.TokenType.DELIMITER, "(")
@@ -199,27 +218,34 @@ class Parser:
         self.expect(lexer_2.TokenType.DELIMITER, ")")
 
         # Handle incorrect delimiter for function body
-        incorrect_delimiter = -1
-        if self.current_token().value != "{":
-            incorrect_delimiter = self.current_token().value
-            # context = ast_node.FuncDefNode(func_name, params, self.parse_body())
-            # self.advance()  # Advance to skip the incorrect token
-            # return ast_node.ErrorNode(message, context)
-
-        self.expect(lexer_2.TokenType.DELIMITER, "{")
-        body = self.parse_body()
-
         try:
-            self.expect(lexer_2.TokenType.DELIMITER, "}")
-        except SyntaxError as e:
-            # If the closing brace is missing, create an error node with the current function context.
-            if incorrect_delimiter == -1:
-                message = "Expected '}', got EOF"
-            else:
-                message = "Expected '{{', got wrong delimiter '{}'".format(incorrect_delimiter)
+            self.expect(lexer_2.TokenType.DELIMITER, "{")
+            body = self.parse_body()
+
+            try:
+                self.expect(lexer_2.TokenType.DELIMITER, "}")
+            except SyntaxError as e:
+                # If the closing brace is missing, create an error node with the current function context.
+                message = "Expected function closed with '}', got EOF"
+                context = ast_node.FuncDefNode(func_name, params, body)
+                return ast_node.ErrorNode(message, context)
+            return ast_node.FuncDefNode(func_name, params, body)
+        except:
+            # handling wrong delimiter open
+            closer = "}"
+            if self.current_token().value == "[":
+                closer = "]"
+            elif self.current_token().value == "(":
+                closer = ")"
+            message = "Unexpected function open"
+            self.advance()
+            body = []
+            while self.current_token() and self.current_token().value != closer:
+                body.append(self.parse_statement())
             context = ast_node.FuncDefNode(func_name, params, body)
+
+            self.advance()
             return ast_node.ErrorNode(message, context)
-        return ast_node.FuncDefNode(func_name, params, body)
 
     # Parse Body and Statements
     def parse_body(self):
@@ -244,6 +270,8 @@ class Parser:
             self.advance()
             if self.current_token().value == ".":
                 return self.parse_method_call(token.value)  # Array method calls
+            elif self.current_token().value == "[":
+                return self.parse_element_call(token.value)  # element method calls
             elif self.current_token().value == "=":
                 self.position-=1
                 return self.parse_assign() 
