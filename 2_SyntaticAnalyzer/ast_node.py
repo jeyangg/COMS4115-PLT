@@ -303,3 +303,13 @@ class CommentNode(ASTNode):
             indent_str, self.text,
             indent_str
         )
+
+class ErrorNode(ASTNode):
+    def __init__(self, message, context=None):
+        self.message = message
+        self.context = context  # Add context to provide more details about the state of the AST before the error occurred
+
+    def __repr__(self):
+        message_repr = "!!! Message={} !!!".format(self.message)
+        context_repr = "\nExpectedContext:\n{}".format(self.context) if self.context else ""
+        return "ErrorNode(\n{}{}\n)".format(message_repr, context_repr)

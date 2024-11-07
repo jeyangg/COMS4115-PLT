@@ -171,9 +171,28 @@ class Parser:
                 self.advance()
                 params.append(self.expect(lexer_2.TokenType.IDENTIFIER).value)
         self.expect(lexer_2.TokenType.DELIMITER, ")")
+
+        # Handle incorrect delimiter for function body
+        incorrect_delimiter = -1
+        if self.current_token().value != "{":
+            incorrect_delimiter = self.current_token().value
+            # context = ast_node.FuncDefNode(func_name, params, self.parse_body())
+            # self.advance()  # Advance to skip the incorrect token
+            # return ast_node.ErrorNode(message, context)
+
         self.expect(lexer_2.TokenType.DELIMITER, "{")
         body = self.parse_body()
-        self.expect(lexer_2.TokenType.DELIMITER, "}")
+
+        try:
+            self.expect(lexer_2.TokenType.DELIMITER, "}")
+        except SyntaxError as e:
+            # If the closing brace is missing, create an error node with the current function context.
+            if incorrect_delimiter == -1:
+                message = "Expected '}', got EOF"
+            else:
+                message = f"Expected '{{', got wrong delimiter '{incorrect_delimiter}'"
+            context = ast_node.FuncDefNode(func_name, params, body)
+            return ast_node.ErrorNode(message, context)
         return ast_node.FuncDefNode(func_name, params, body)
 
     # Parse Body and Statements
