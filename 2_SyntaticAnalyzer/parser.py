@@ -82,7 +82,7 @@ class Parser:
         args = []
         if self.current_token().type != lexer_2.TokenType.DELIMITER or self.current_token().value != ")":
             args.append(self.parse_expr())  # Parse the first argument
-            while self.current_token().value == ",s":
+            while self.current_token().value == ",":
                 self.advance()
                 args.append(self.parse_expr())  # Parse additional arguments
         self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing parenthesis
