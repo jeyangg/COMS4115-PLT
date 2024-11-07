@@ -45,6 +45,8 @@ class NullNode(ASTNode):
 
 class BinaryOpNode(ASTNode):
     def __init__(self, left, operator, right):
+        assert isinstance(left, ASTNode), "Expected ASTNode for left, got {}".format(type(left).__name__)
+        assert isinstance(right, ASTNode), "Expected ASTNode for right, got {}".format(type(right).__name__)
         self.left = left
         self.operator = operator
         self.right = right
@@ -112,10 +114,6 @@ class IfNode(ASTNode):
 
     def _repr(self, indent):
         indent_str = "    " * indent
-        body_repr = "\n".join(stmt._repr(indent + 2) for stmt in self.body)
-        else_repr = (
-            "None" if not self.else_body else "\n".join(stmt._repr(indent + 2) for stmt in self.else_body)
-        )
         return (
             "{}IfNode(\n"
             "{}    condition=\n{}\n"
@@ -125,9 +123,9 @@ class IfNode(ASTNode):
         ).format(
             indent_str,
             indent_str, self.condition._repr(indent + 2),
-            indent_str, body_repr,
+            indent_str, self.body,
             indent_str,
-            indent_str, else_repr,
+            indent_str, self.else_body,
             indent_str
         )
 
@@ -199,7 +197,6 @@ class FuncCallNode(ASTNode):
 
     def _repr(self, indent):
         indent_str = "    " * indent
-        args_repr = "\n".join(arg._repr(indent + 2) for arg in self.args)
         return (
             "{}FuncCallNode(\n"
             "{}    func_name='{}'\n"
@@ -208,7 +205,7 @@ class FuncCallNode(ASTNode):
         ).format(
             indent_str,
             indent_str, self.func_name,
-            indent_str, args_repr,
+            indent_str, self.args,
             indent_str,
             indent_str
         )
@@ -220,7 +217,6 @@ class ListNode(ASTNode):
 
     def _repr(self, indent):
         indent_str = "    " * indent
-        elements_repr = "\n".join(element._repr(indent + 2) for element in self.elements)
         return (
             "{}ListNode(\n"
             "{}    elements=[\n{}\n{}    ]\n"
@@ -228,7 +224,30 @@ class ListNode(ASTNode):
         ).format(
             indent_str,
             indent_str,
-            elements_repr,
+            self.elements,
+            indent_str,
+            indent_str
+        )
+
+class MethodCallNode(ASTNode):
+    def __init__(self, list, method, args):
+        self.list = list
+        self.method = method
+        self.args = args
+
+    def _repr(self, indent):
+        indent_str = "    " * indent
+        return (
+            "{}MethodCallNode(\n"
+            "{}    list='{}'\n"
+            "{}    method='{}'\n"
+            "{}    args=[\n{}\n{}    ]\n"
+            "{})"
+        ).format(
+            indent_str,
+            indent_str, self.list,
+            indent_str, self.method,
+            indent_str, self.args,
             indent_str,
             indent_str
         )

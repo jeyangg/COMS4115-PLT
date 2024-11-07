@@ -6,18 +6,6 @@ import sys
 import ast_node
 import lexer_2
 
-import ast_node
-import lexer_2
-
-import ast_node
-import lexer_2
-
-import ast_node
-import lexer_2
-
-import ast_node
-import lexer_2
-
 class Parser:
     def __init__(self, source_code):
         self.lexer = lexer_2.Lexer()
@@ -49,8 +37,12 @@ class Parser:
                     ast.append(self.parse_func_def())
                 elif token.value == "출력":
                     ast.append(self.parse_print())
-                elif token.value == "만약에":
+                elif token.value == "만약에": 
                     ast.append(self.parse_if())
+                elif token.value == "동안에":
+                    ast.append(self.parse_while())
+                elif token.value == "배열":
+                    ast.append(self.parse_array_declaration())
                 else:
                     raise SyntaxError("Unexpected top-level token {}".format(token.value))
             elif token.type == lexer_2.TokenType.IDENTIFIER:
@@ -59,10 +51,33 @@ class Parser:
                 raise SyntaxError("Unexpected top-level token {}".format(token.value))
         return ast
 
+	# Array Declaration Parsing
+    def parse_array_declaration(self):
+        self.expect(lexer_2.TokenType.KEYWORD, "배열")
+        array_name = self.expect(lexer_2.TokenType.IDENTIFIER).value
+        self.expect(lexer_2.TokenType.OPERATOR, "=")
+        self.expect(lexer_2.TokenType.DELIMITER, "[")
+        self.expect(lexer_2.TokenType.DELIMITER, "]")
+        print(array_name)
+        return ast_node.ListNode(array_name)
+    
+    def parse_method_call(self, list):
+        self.expect(lexer_2.TokenType.DELIMITER, ".")
+        method = self.expect(lexer_2.TokenType.KEYWORD).value
+        self.expect(lexer_2.TokenType.DELIMITER, "(")
+        args = []
+        if self.current_token().type != lexer_2.TokenType.DELIMITER or self.current_token().value != ")":
+            args.append(self.parse_expr())
+            while self.current_token().value == ",":
+                self.advance()
+                args.append(self.parse_expr())
+        self.expect(lexer_2.TokenType.DELIMITER, ")")
+        return ast_node.FuncCallNode(method, args)
+
     # Parse Expressions
     def parse_expr(self):
         left = self.parse_pred()
-        while self.current_token() and self.current_token().value in ["&&", "||"]:
+        while self.current_token() and self.current_token().value in ["&&", "||", '!=', '==', '<=', '>=', '>', '<']:
             operator = self.current_token().value
             self.advance()
             right = self.parse_pred()
@@ -97,7 +112,18 @@ class Parser:
             return ast_node.StringNode(token.value)
         elif token.type == lexer_2.TokenType.IDENTIFIER:
             self.advance()
+            if self.current_token() and self.current_token().value == ".":
+                return self.parse_method_call(token.value)  # Array method calls
             return ast_node.IdentifierNode(token.value)
+        elif token.type == lexer_2.TokenType.KEYWORD:
+            if token.value == "랜덤":
+                self.advance()  # Move past "랜덤"
+                if self.current_token() and self.current_token().value == "(":
+                  self.advance()  # Move past "("
+                  self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing ")"
+                  return ast_node.FuncCallNode(token.value, [])
+                else:
+                  raise SyntaxError("Expected '(' after '랜덤'")
         elif token.value == "(":
             self.advance()
             expr = self.parse_expr()
@@ -110,23 +136,29 @@ class Parser:
     def parse_if(self):
         self.expect(lexer_2.TokenType.KEYWORD, "만약에")
         # Parse the condition directly after "만약에"
-        condition = self.parse_expr()  # Parse the condition
-        self.expect(lexer_2.TokenType.DELIMITER, ":")  # Expect ':' after the condition
-        self.expect(lexer_2.TokenType.DELIMITER, "{")  # Expect '{' to start the body
+        condition = self.parse_expr() 
+        self.expect(lexer_2.TokenType.DELIMITER, "{") 
         body = self.parse_body()
-        self.expect(lexer_2.TokenType.DELIMITER, "}")  # Expect '}' to end the body
+        self.expect(lexer_2.TokenType.DELIMITER, "}")  
         
         # Handle the optional "아니면" (else) part
         else_body = None
         if self.current_token() and self.current_token().value == "아니면":
             self.advance()
-            self.expect(lexer_2.TokenType.DELIMITER, ":")  # Expect ':'
-            self.expect(lexer_2.TokenType.DELIMITER, "{")  # Expect '{' to start the else body
+            self.expect(lexer_2.TokenType.DELIMITER, "{") 
             else_body = self.parse_body()
-            self.expect(lexer_2.TokenType.DELIMITER, "}")  # Expect '}' to end the else body
+            self.expect(lexer_2.TokenType.DELIMITER, "}")
             
         return ast_node.IfNode(condition, body, else_body)
-
+    
+    def parse_while(self):
+        self.expect(lexer_2.TokenType.KEYWORD, "동안에")
+        condition = self.parse_expr() 
+        self.expect(lexer_2.TokenType.DELIMITER, "{") 
+        body = self.parse_body()
+        self.expect(lexer_2.TokenType.DELIMITER, "}")  
+        return ast_node.WhileNode(condition, body)
+    
     # Parse Function Definition
     def parse_func_def(self):
         self.expect(lexer_2.TokenType.KEYWORD, "함수")
@@ -164,7 +196,12 @@ class Parser:
             elif token.value == "출력":
                 return self.parse_print()
         elif token.type == lexer_2.TokenType.IDENTIFIER:
-            return self.parse_assign()
+            self.advance()
+            if self.current_token().value == ".":
+                return self.parse_method_call(token.value)  # Array method calls
+            elif self.current_token().value == "=":
+                self.position-=1
+                return self.parse_assign() 
         raise SyntaxError("Unexpected token {}".format(token.value))
 
     def parse_assign(self):
@@ -184,11 +221,9 @@ class Parser:
 # Main function to use the Parser class
 def main(input_file):
     try:
-        # Read source code from the input file
         with open(input_file, 'r', encoding='utf-8') as f:
             source_code = f.read()
 
-        # Initialize the parser with the source code directly
         parser = Parser(source_code)
         ast = parser.parse()
 
