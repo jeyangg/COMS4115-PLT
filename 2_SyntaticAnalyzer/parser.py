@@ -13,11 +13,15 @@ class Parser:
         self.position = 0
 
     def current_token(self):
+        while self.position < len(self.tokens) and self.tokens[self.position].type == lexer_2.TokenType.COMMENT:
+            self.position += 1
         return self.tokens[self.position] if self.position < len(self.tokens) else None
 
     def advance(self):
         self.position += 1
-
+        while self.position < len(self.tokens) and self.tokens[self.position].type == lexer_2.TokenType.COMMENT:
+            self.position += 1
+    
     def expect(self, expected_type, expected_value=None):
         token = self.current_token()
         if token and token.type == expected_type and (expected_value is None or token.value == expected_value):
@@ -58,7 +62,6 @@ class Parser:
         self.expect(lexer_2.TokenType.OPERATOR, "=")
         self.expect(lexer_2.TokenType.DELIMITER, "[")
         self.expect(lexer_2.TokenType.DELIMITER, "]")
-        print(array_name)
         return ast_node.ListNode(array_name)
     
     def parse_method_call(self, list):
@@ -73,11 +76,22 @@ class Parser:
                 args.append(self.parse_expr())
         self.expect(lexer_2.TokenType.DELIMITER, ")")
         return ast_node.FuncCallNode(method, args)
+    
+    def parse_func_call(self, func_name):
+        self.expect(lexer_2.TokenType.DELIMITER, "(")
+        args = []
+        if self.current_token().type != lexer_2.TokenType.DELIMITER or self.current_token().value != ")":
+            args.append(self.parse_expr())  # Parse the first argument
+            while self.current_token().value == ",s":
+                self.advance()
+                args.append(self.parse_expr())  # Parse additional arguments
+        self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing parenthesis
+        return ast_node.FuncCallNode(func_name, args)
 
     # Parse Expressions
     def parse_expr(self):
         left = self.parse_pred()
-        while self.current_token() and self.current_token().value in ["&&", "||", '!=', '==', '<=', '>=', '>', '<']:
+        while self.current_token() and self.current_token().value in ["&&", "||", '!=', '==', '<=', '>=', '>', '<', "그리고", "이거나", ","]:
             operator = self.current_token().value
             self.advance()
             right = self.parse_pred()
@@ -112,9 +126,12 @@ class Parser:
             return ast_node.StringNode(token.value)
         elif token.type == lexer_2.TokenType.IDENTIFIER:
             self.advance()
+            identifier = token.value
             if self.current_token() and self.current_token().value == ".":
-                return self.parse_method_call(token.value)  # Array method calls
-            return ast_node.IdentifierNode(token.value)
+                return self.parse_method_call(identifier)  # Array method calls
+            if self.current_token() and self.current_token().value == "(":
+                return self.parse_func_call(identifier)
+            return ast_node.IdentifierNode(identifier)
         elif token.type == lexer_2.TokenType.KEYWORD:
             if token.value == "랜덤":
                 self.advance()  # Move past "랜덤"
@@ -123,7 +140,16 @@ class Parser:
                   self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing ")"
                   return ast_node.FuncCallNode(token.value, [])
                 else:
-                  raise SyntaxError("Expected '(' after '랜덤'")
+                  raise SyntaxError("Expected '(' after '랜덤'")      
+            elif token.value == "진실":
+                self.advance()
+                return ast_node.BooleanNode(True)
+            elif token.value == "거짓":
+                self.advance()
+                return ast_node.BooleanNode(False)
+            elif token.value == "널":
+                self.advance()
+                return ast_node.NullNode()
         elif token.value == "(":
             self.advance()
             expr = self.parse_expr()
@@ -190,7 +216,7 @@ class Parser:
             if incorrect_delimiter == -1:
                 message = "Expected '}', got EOF"
             else:
-                message = f"Expected '{{', got wrong delimiter '{incorrect_delimiter}'"
+                message = "Expected '{{', got wrong delimiter '{}'".format(incorrect_delimiter)
             context = ast_node.FuncDefNode(func_name, params, body)
             return ast_node.ErrorNode(message, context)
         return ast_node.FuncDefNode(func_name, params, body)
