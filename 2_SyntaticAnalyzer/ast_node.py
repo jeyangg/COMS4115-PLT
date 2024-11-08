@@ -357,10 +357,17 @@ class ErrorNode(ASTNode):
         self.message = message
         self.context = context
 
-    def __repr__(self):
+    def _repr(self, indent):
+        indent_str = "    " * indent
         message_repr = "!!! Message={} !!!".format(self.message)
-        context_repr = "\nExpectedContext:\n{}".format(self.context) if self.context else ""
-        return "ErrorNode(\n{}{}\n)".format(message_repr, context_repr)
+        context_repr = "\n{}ExpectedContext:\n{}{}".format(indent_str, indent_str, self.context) if self.context else ""
+        return ("{}ErrorNode(\n"
+                "{}{}{}\n)"
+                ).format(
+                    indent_str, 
+                    indent_str,
+                    message_repr, 
+                    context_repr)
 
 
 class ASTVisualizer:
