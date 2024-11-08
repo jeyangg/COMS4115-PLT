@@ -1,3 +1,9 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+plt.rcParams['font.family'] = 'NanumGothic'  # Make sure you have installed Nanum Gothic or another Korean font
+
+
 class ASTNode:
     def __repr__(self):
         return self._repr(0)
@@ -222,8 +228,8 @@ class DictNode(ASTNode):
         return (
             "{}DictNode(\n"
             "{}    name={}\n"
-            "{}    keys=[{}]\n"
-            "{}    values=[{}]\n"
+            "{}    key=[{}]\n"
+            "{}    value=[{}]\n"
             "{})"
         ).format(
             indent_str,
@@ -349,9 +355,81 @@ class CommentNode(ASTNode):
 class ErrorNode(ASTNode):
     def __init__(self, message, context=None):
         self.message = message
-        self.context = context  # Add context to provide more details about the state of the AST before the error occurred
+        self.context = context
 
     def __repr__(self):
         message_repr = "!!! Message={} !!!".format(self.message)
         context_repr = "\nExpectedContext:\n{}".format(self.context) if self.context else ""
         return "ErrorNode(\n{}{}\n)".format(message_repr, context_repr)
+
+
+class ASTVisualizer:
+    def __init__(self):
+        self.graph = nx.DiGraph()
+        self.node_counter = 0  # To keep track of unique node labels
+
+    def add_node(self, node, parent_label=None):
+        # Create a unique label for each node based on its type and counter
+        current_label = f"{type(node).__name__}_{self.node_counter}"
+        label_text = repr(node) if not isinstance(node, (FuncDefNode, BinaryOpNode, DictAssignNode, ReturnNode, IfNode)) else f"{type(node).__name__}"
+        self.graph.add_node(current_label, label=label_text)
+        self.node_counter += 1
+
+        # Add an edge from the parent to the current node
+        if parent_label:
+            self.graph.add_edge(parent_label, current_label)
+
+        # Recursively add child nodes based on the node type
+        if isinstance(node, FuncDefNode):
+            params_label = f"Params: {node.params}"
+            params_node_label = f"Params_{self.node_counter}"
+            self.graph.add_node(params_node_label, label=params_label)
+            self.node_counter += 1
+            self.graph.add_edge(current_label, params_node_label)
+
+            for stmt in node.body:
+                self.add_node(stmt, current_label)
+        elif isinstance(node, DictAssignNode):
+            self.add_node(node.value, current_label)
+        elif isinstance(node, BinaryOpNode):
+            self.add_node(node.left, current_label)
+            self.add_node(f"Operator: {node.operator}", current_label)
+            self.add_node(node.right, current_label)
+        elif isinstance(node, ReturnNode):
+            self.add_node(node.expr, current_label)
+        elif isinstance(node, IfNode):
+            # Add condition node with full condition details
+            condition_label = f"Condition_{self.node_counter}"
+            condition_text = f"Condition: {repr(node.condition)}"
+            self.graph.add_node(condition_label, label=condition_text)
+            self.node_counter += 1
+            self.graph.add_edge(current_label, condition_label)
+
+            # Add if body statements directly
+            for stmt in node.body:
+                self.add_node(stmt, condition_label)
+
+            # Add else body if present
+            if node.else_body:
+                else_body_label = f"ElseBody_{self.node_counter}"
+                self.graph.add_node(else_body_label, label="Else Body")
+                self.node_counter += 1
+                self.graph.add_edge(condition_label, else_body_label)
+                for stmt in node.else_body:
+                    self.add_node(stmt, else_body_label)
+        elif isinstance(node, ErrorNode):
+            # Only add the ErrorNode itself without visiting its context
+            return
+
+
+
+    def plot(self):
+        # Get labels for nodes
+        labels = nx.get_node_attributes(self.graph, 'label')
+        
+        # Create a layout and draw the graph in a vertical tree structure using a spring layout
+        pos = nx.circular_layout(self.graph) 
+        plt.figure(figsize=(12, 10))
+        nx.draw(self.graph, pos, labels=labels, with_labels=True, node_size=5000, 
+                node_color='powderblue', font_weight='bold', font_size=8, arrows=True)
+        plt.show()
