@@ -141,6 +141,13 @@ class Parser:
             self.advance()
             return ast_node.NumberNode(token.value)
         elif token.type == lexer_2.TokenType.STRING:
+            # Check if the string is unterminated
+            if not (token.value.startswith('"') and token.value.endswith('"')) and not (token.value.startswith("'") and token.value.endswith("'")):
+                error_node = ast_node.ErrorNode("Unterminated string literal", token.value)
+                self.advance()
+                return error_node
+            
+            # If the string is properly terminated, proceed normally
             self.advance()
             return ast_node.StringNode(token.value)
         elif token.type == lexer_2.TokenType.IDENTIFIER:
@@ -155,11 +162,13 @@ class Parser:
             if token.value == "랜덤":
                 self.advance()  # Move past "랜덤"
                 if self.current_token() and self.current_token().value == "(":
-                  self.advance()  # Move past "("
-                  self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing ")"
-                  return ast_node.FuncCallNode(token.value, [])
+                    self.advance()  # Move past "("
+                    self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing ")"
+                    return ast_node.FuncCallNode(token.value, [])
                 else:
-                  raise SyntaxError("Expected '(' after '랜덤'")      
+                    # Return ErrorNode if "(" is not found
+                    context = "Expected '(' after '랜덤'"
+                    return ast_node.ErrorNode("Expected '('", context)
             elif token.value == "진실":
                 self.advance()
                 return ast_node.BooleanNode(True)
@@ -175,8 +184,10 @@ class Parser:
             self.expect(lexer_2.TokenType.DELIMITER, ")")
             return expr
         else:
-            raise SyntaxError("Unexpected token {}".format(token.value))
-
+            context = "Unexpected token: {}".format(token.value)
+            error_node = ast_node.ErrorNode("Unexpected token", context)
+            return error_node
+        
     # Parse If Statement
     def parse_if(self):
         self.expect(lexer_2.TokenType.KEYWORD, "만약에")
@@ -299,10 +310,15 @@ def main(input_file):
 
         parser = Parser(source_code)
         ast = parser.parse()
+        visualizer = ast_node.ASTVisualizer()
 
         # Print the generated AST
         print("Generated AST:")
         print(ast)
+
+        for node in ast:
+            visualizer.add_node(node)
+        visualizer.plot()
 
     except FileNotFoundError:
         print("Error: File '{}' not found.".format(input_file))
