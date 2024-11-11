@@ -148,6 +148,23 @@ class Parser:
         token = self.current_token()
         if token.type == lexer_2.TokenType.NUMBER:
             self.advance()
+            # Check if the next two tokens match the error pattern: '. .' following a number
+            if (self.current_token() and self.current_token().value == "." and
+            	self.peek_next_token() and self.peek_next_token().value == "." and
+            	self.peek_next_token(2) and self.peek_next_token(2).type == lexer_2.TokenType.NUMBER):
+                expected_value = f"{token.value}.{self.peek_next_token(2).value}"
+                error_node = ast_node.ErrorNode("Invalid number format", expected_value)
+                self.advance()
+                self.advance() 
+                self.advance()
+                return error_node
+            elif (self.current_token() and self.current_token().value == "." and
+            	self.peek_next_token() and self.peek_next_token().value == "."):
+                expected_value = f"{token.value}."
+                error_node = ast_node.ErrorNode("Invalid number format", expected_value)
+                self.advance()
+                self.advance()
+                return error_node
             return ast_node.NumberNode(token.value)
         elif token.type == lexer_2.TokenType.STRING:
             # Check if the string is unterminated
@@ -309,6 +326,11 @@ class Parser:
         expr = self.parse_expr()
         self.expect(lexer_2.TokenType.DELIMITER, ")")
         return ast_node.PrintNode(expr)
+    
+    def peek_next_token(self, offset=1):
+        if self.position + offset < len(self.tokens):
+            return self.tokens[self.position + offset]
+        return None
 
     
 # Main function to use the Parser class
@@ -319,15 +341,15 @@ def main(input_file):
 
         parser = Parser(source_code)
         ast = parser.parse()
-        visualizer = ast_node.ASTVisualizer()
+        # visualizer = ast_node.ASTVisualizer()
 
         # Print the generated AST
         print("Generated AST:")
         print(ast)
 
-        for node in ast:
-            visualizer.add_node(node)
-        visualizer.plot()
+        # for node in ast:
+        #     visualizer.add_node(node)
+        # visualizer.plot()
 
     except FileNotFoundError:
         print("Error: File '{}' not found.".format(input_file))
