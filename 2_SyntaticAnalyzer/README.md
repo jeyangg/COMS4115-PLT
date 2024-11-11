@@ -9,14 +9,14 @@ by Ella Kim (yk3040) and Je Yang (jy3342)
 - `otherchar` : |!”%&/()=+-*#><;,^.][\n \t
 - `char`      : letter | otherchar | digit0
 
-- int`       : '0' | digit+digit0*
-- float`     : digit0+ '.' digit0+
-- num`       : ('-')?(float | int)
-- bool`      : 'True' | '진실' | 'False' | '거짓'
-- null`      : 'NULL' | '널'
-- var`       : letter ([[_digit0*] | [_letter]])*
-- qString`   : '"' (char)* '"'
-- commentLine`   : '#' (char)*
+- `int`       : '0' | digit+digit0*
+- `float`     : digit0+ '.' digit0+
+- `num`       : ('-')?(float | int)
+- `bool`      : 'True' | '진실' | 'False' | '거짓'
+- `null`      : 'NULL' | '널'
+- `var`       : letter ([[_digit0*] | [_letter]])*
+- `qString`   : '"' (char)* '"'
+- `commentLine`   : '#' (char)*
 
 - `obj`       : var | num | qString | bool | null | list | listElem
 
