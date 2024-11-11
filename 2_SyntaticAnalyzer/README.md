@@ -96,16 +96,48 @@ The HANA parser adds `ErrorNode` to the AST where the error is detected. The Err
 ## 4. Sample Input Programs and Expected Outputs
 ### Take a look into our [demo video](https://youtu.be/yiyRi3v4ZIM) !!
 ### Sample 1
+Parser Output:
+
+<img width="350" alt="Sample1" src="https://github.com/user-attachments/assets/42ee931f-8131-4218-b486-9edd3156b311">
+
+Visualizer:
 ![output1](./samples_output/sample1.png)
 
 ### Sample 2
+Parser Output: 
+
+<img width="350" alt="Sample2" src="https://github.com/user-attachments/assets/54407b5d-d4da-493f-8074-d67b4a218165">
+
+Visualizer: 
+
 ![output2](./samples_output/sample2.png)
 
 ### Sample 3
+Parser Output: 
+
+<img width="350" alt="Sample3" src="https://github.com/user-attachments/assets/9374385c-2298-44e0-a174-c4f4e38891ff">
+<img width="350" alt="Sample3_cont" src="https://github.com/user-attachments/assets/16724dae-9d09-4ed7-be2c-eafa8a201320">
+
+Visualizer: 
+
 ![output3](./samples_output/sample3.png)
 
 ### Sample 4
+Parser Output:
+
+<img width="350" alt="Sample4" src="https://github.com/user-attachments/assets/7f7fef0b-8ab6-4b2a-b470-6ee0f533583b">
+
+Visualizer:
+
 ![output4](./samples_output/sample4.png)
 
 ### Sample 5
+Parser Output:
+
+<img width="330" alt="Sample5" src="https://github.com/user-attachments/assets/0278da8a-f4d0-4c24-ab7d-d955e47804a3">
+<img width="330" alt="Sample5.2" src="https://github.com/user-attachments/assets/a18d73c6-deee-4309-bea8-1f70969eeef9">
+<img width="330" alt="Sample5.3" src="https://github.com/user-attachments/assets/9c93528e-3093-41f7-a51a-e630d2685479">
+
+Visualizer:
+
 ![output5](./samples_output/sample5.png)
