@@ -53,11 +53,14 @@ class Parser:
                     raise SyntaxError("Unexpected top-level token {}".format(token.value))
             elif token.type == lexer_2.TokenType.IDENTIFIER:
                 ast.append(self.parse_assign())
+            elif token.type == lexer_2.TokenType.KEYWORD and token.value == "clear":
+                self.advance()  # Move to the next token after 'clear'
+                continue  # Skip the 'clear' token and continue parsing
             else:
                 raise SyntaxError("Unexpected top-level token {}".format(token.value))
         return ast
 
-	# Array Declaration Parsing
+    # Array Declaration Parsing
     def parse_array_declaration(self):
         self.expect(lexer_2.TokenType.KEYWORD, "배열")
         array_name = self.expect(lexer_2.TokenType.IDENTIFIER).value
@@ -66,7 +69,7 @@ class Parser:
         self.expect(lexer_2.TokenType.DELIMITER, "]")
         return ast_node.ListNode(array_name)
     
-	# Dictionary Declaration Parsing
+    # Dictionary Declaration Parsing
     def parse_dict_declaration(self):
         self.expect(lexer_2.TokenType.KEYWORD, "딕셔너리")
         array_name = self.expect(lexer_2.TokenType.IDENTIFIER).value
@@ -128,7 +131,7 @@ class Parser:
 
     def parse_term(self):
         left = self.parse_base_expr()
-        while self.current_token() and self.current_token().value in ["*", "/", "%"]:
+        while self.current_token() and self.current_token().value in ["*", "**", "/", "%"]:
             operator = self.current_token().value
             self.advance()
             right = self.parse_base_expr()
@@ -284,7 +287,7 @@ class Parser:
             elif self.current_token().value == "[":
                 return self.parse_element_call(token.value)  # element method calls
             elif self.current_token().value == "=":
-                self.position-=1
+                self.position -= 1
                 return self.parse_assign() 
         raise SyntaxError("Unexpected token {}".format(token.value))
 
@@ -316,9 +319,9 @@ def main(input_file):
         print("Generated AST:")
         print(ast)
 
-        for node in ast:
-            visualizer.add_node(node)
-        visualizer.plot()
+        # for node in ast:
+        #     visualizer.add_node(node)
+        # visualizer.plot()
 
     except FileNotFoundError:
         print("Error: File '{}' not found.".format(input_file))
