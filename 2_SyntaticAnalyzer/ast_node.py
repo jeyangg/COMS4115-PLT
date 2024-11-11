@@ -1,9 +1,9 @@
-# import networkx as nx
-# import matplotlib.pyplot as plt
-# import matplotlib.font_manager as fm
-# plt.rcParams['font.family'] = 'NanumGothic'  # Make sure you have installed Nanum Gothic or another Korean font
-# import pydot
-# from networkx.drawing.nx_pydot import graphviz_layout
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+plt.rcParams['font.family'] = 'NanumGothic'  # Make sure you have installed Nanum Gothic or another Korean font
+import pydot
+from networkx.drawing.nx_pydot import graphviz_layout
 
 
 class ASTNode:
@@ -279,8 +279,7 @@ class ListNode(ASTNode):
         )
 
 class MethodCallNode(ASTNode):
-    def __init__(self, list, method, args):
-        self.list = list
+    def __init__(self, method, args):
         self.method = method
         self.args = args
 
@@ -288,13 +287,11 @@ class MethodCallNode(ASTNode):
         indent_str = "    " * indent
         return (
             "{}MethodCallNode(\n"
-            "{}    list='{}'\n"
             "{}    method='{}'\n"
-            "{}    args=[\n{}\n{}    ]\n"
+            "{}    args=\n{}\n{}\n"
             "{})"
         ).format(
             indent_str,
-            indent_str, self.list,
             indent_str, self.method,
             indent_str, self.args,
             indent_str,
@@ -371,167 +368,167 @@ class ErrorNode(ASTNode):
                     context_repr)
 
 
-# class ASTVisualizer:
-#     def __init__(self):
-#         self.graph = nx.DiGraph()
-#         self.node_counter = 0  # To keep track of unique node labels
+class ASTVisualizer:
+    def __init__(self):
+        self.graph = nx.DiGraph()
+        self.node_counter = 0  # To keep track of unique node labels
 
-#     def add_node(self, node, parent_label=None):
-#         # Create a unique label for each node based on its type and counter
-#         current_label = f"{type(node).__name__}_{self.node_counter}"
-#         label_text = repr(node) if not isinstance(node, (FuncDefNode, BinaryOpNode, DictAssignNode, WhileNode, ReturnNode, IfNode)) else f"{type(node).__name__}"
+    def add_node(self, node, parent_label=None):
+        # Create a unique label for each node based on its type and counter
+        current_label = f"{type(node).__name__}_{self.node_counter}"
+        label_text = repr(node) if not isinstance(node, (FuncDefNode, BinaryOpNode, DictAssignNode, WhileNode, ReturnNode, IfNode)) else f"{type(node).__name__}"
         
-#         # Remove problematic characters from label text
-#         label_text = label_text.replace(":", " -")
+        # Remove problematic characters from label text
+        label_text = label_text.replace(":", " -")
 
-#         self.graph.add_node(current_label, label=label_text)
-#         self.node_counter += 1
+        self.graph.add_node(current_label, label=label_text)
+        self.node_counter += 1
 
-#         # Add an edge from the parent to the current node
-#         if parent_label:
-#             self.graph.add_edge(parent_label, current_label)
+        # Add an edge from the parent to the current node
+        if parent_label:
+            self.graph.add_edge(parent_label, current_label)
 
-#         # Recursively add child nodes based on the node type
-#         if isinstance(node, FuncDefNode):
-#             params_label = f"Params_{self.node_counter}"
-#             params_text = f"Params\n{node.params}"
-#             self.graph.add_node(params_label, label=params_text)
-#             self.node_counter += 1
-#             self.graph.add_edge(current_label, params_label)
+        # Recursively add child nodes based on the node type
+        if isinstance(node, FuncDefNode):
+            params_label = f"Params_{self.node_counter}"
+            params_text = f"Params\n{node.params}"
+            self.graph.add_node(params_label, label=params_text)
+            self.node_counter += 1
+            self.graph.add_edge(current_label, params_label)
 
-#             for stmt in node.body:
-#                 self.add_node(stmt, current_label)
-#         elif isinstance(node, DictAssignNode):
-#             self.add_node(node.value, current_label)
-#         elif isinstance(node, BinaryOpNode):
-#             self.add_node(node.left, current_label)
-#             operator_label = f"Operator_{self.node_counter}"
-#             self.graph.add_node(operator_label, label=f"Operator\n{node.operator}")
-#             self.node_counter += 1
-#             self.graph.add_edge(current_label, operator_label)
-#             self.add_node(node.right, current_label)
-#         elif isinstance(node, ReturnNode):
-#             self.add_node(node.expr, current_label)
-#         elif isinstance(node, IfNode):
-#             # Add condition node with full condition details
-#             condition_label = f"Condition_{self.node_counter}"
-#             condition_text = f"Condition\n{repr(node.condition)}"
-#             self.graph.add_node(condition_label, label=condition_text)
-#             self.node_counter += 1
-#             self.graph.add_edge(current_label, condition_label)
+            for stmt in node.body:
+                self.add_node(stmt, current_label)
+        elif isinstance(node, DictAssignNode):
+            self.add_node(node.value, current_label)
+        elif isinstance(node, BinaryOpNode):
+            self.add_node(node.left, current_label)
+            operator_label = f"Operator_{self.node_counter}"
+            self.graph.add_node(operator_label, label=f"Operator\n{node.operator}")
+            self.node_counter += 1
+            self.graph.add_edge(current_label, operator_label)
+            self.add_node(node.right, current_label)
+        elif isinstance(node, ReturnNode):
+            self.add_node(node.expr, current_label)
+        elif isinstance(node, IfNode):
+            # Add condition node with full condition details
+            condition_label = f"Condition_{self.node_counter}"
+            condition_text = f"Condition\n{repr(node.condition)}"
+            self.graph.add_node(condition_label, label=condition_text)
+            self.node_counter += 1
+            self.graph.add_edge(current_label, condition_label)
 
-#             # Add if body statements directly
-#             for stmt in node.body:
-#                 self.add_node(stmt, condition_label)
+            # Add if body statements directly
+            for stmt in node.body:
+                self.add_node(stmt, condition_label)
 
-#             # Add else body if present
-#             if node.else_body:
-#                 else_body_label = f"ElseBody_{self.node_counter}"
-#                 self.graph.add_node(else_body_label, label="Else Body")
-#                 self.node_counter += 1
-#                 self.graph.add_edge(condition_label, else_body_label)
-#                 for stmt in node.else_body:
-#                     self.add_node(stmt, else_body_label)
-#         elif isinstance(node, WhileNode):
-#             # Add condition node with full condition details
-#             condition_label = f"Condition_{self.node_counter}"
-#             self.graph.add_node(condition_label, label=f"Condition\n{node.condition}")
-#             self.node_counter += 1
-#             self.graph.add_edge(current_label, condition_label)
+            # Add else body if present
+            if node.else_body:
+                else_body_label = f"ElseBody_{self.node_counter}"
+                self.graph.add_node(else_body_label, label="Else Body")
+                self.node_counter += 1
+                self.graph.add_edge(condition_label, else_body_label)
+                for stmt in node.else_body:
+                    self.add_node(stmt, else_body_label)
+        elif isinstance(node, WhileNode):
+            # Add condition node with full condition details
+            condition_label = f"Condition_{self.node_counter}"
+            self.graph.add_node(condition_label, label=f"Condition\n{node.condition}")
+            self.node_counter += 1
+            self.graph.add_edge(current_label, condition_label)
 
-#             # Add while body statements directly
-#             for stmt in node.body:
-#                 self.add_node(stmt, condition_label)
-#         elif isinstance(node, AssignNode):
-#             # Add expr node if it's a BinaryOpNode
-#             if isinstance(node.expr, BinaryOpNode):
-#                 var_label = f"Var_{self.node_counter}"
-#                 self.graph.add_node(var_label, label=f"Var\n{repr(node.var)}")
-#                 self.node_counter += 1
-#                 self.graph.add_edge(current_label, var_label)
-#                 self.add_node(node.expr, current_label)
+            # Add while body statements directly
+            for stmt in node.body:
+                self.add_node(stmt, condition_label)
+        elif isinstance(node, AssignNode):
+            # Add expr node if it's a BinaryOpNode
+            if isinstance(node.expr, BinaryOpNode):
+                var_label = f"Var_{self.node_counter}"
+                self.graph.add_node(var_label, label=f"Var\n{repr(node.var)}")
+                self.node_counter += 1
+                self.graph.add_edge(current_label, var_label)
+                self.add_node(node.expr, current_label)
 
 
-#     def plot(self):
-#         # Get labels for nodes
-#         labels = nx.get_node_attributes(self.graph, 'label')
+    def plot(self):
+        # Get labels for nodes
+        labels = nx.get_node_attributes(self.graph, 'label')
 
-#         # Find the root nodes (they should have zero incoming edges)
-#         root_nodes = [node for node, in_degree in self.graph.in_degree() if in_degree == 0]
+        # Find the root nodes (they should have zero incoming edges)
+        root_nodes = [node for node, in_degree in self.graph.in_degree() if in_degree == 0]
         
-#         if len(root_nodes) > 1:
-#             # Create a virtual root node to connect all roots
-#             virtual_root = "VirtualRoot"
-#             self.graph.add_node(virtual_root, label="Root")
-#             for root in root_nodes:
-#                 self.graph.add_edge(virtual_root, root)
-#             root = virtual_root
-#         elif len(root_nodes) == 1:
-#             root = root_nodes[0]
-#         else:
-#             raise ValueError("The graph must have at least one root to create a tree layout.")
+        if len(root_nodes) > 1:
+            # Create a virtual root node to connect all roots
+            virtual_root = "VirtualRoot"
+            self.graph.add_node(virtual_root, label="Root")
+            for root in root_nodes:
+                self.graph.add_edge(virtual_root, root)
+            root = virtual_root
+        elif len(root_nodes) == 1:
+            root = root_nodes[0]
+        else:
+            raise ValueError("The graph must have at least one root to create a tree layout.")
 
-#         # Custom layout to create a tree-like visualization
-#         pos = self.tree_layout(self.graph, root=root)
+        # Custom layout to create a tree-like visualization
+        pos = self.tree_layout(self.graph, root=root)
 
-#         # Draw the graph
-#         plt.figure(figsize=(15, 12))
-#         nx.draw(self.graph, pos, labels=labels, with_labels=True, node_size=7000,
-#                 node_color='lightblue', font_weight='bold', font_size=8, arrows=False)
-#         plt.show()
+        # Draw the graph
+        plt.figure(figsize=(15, 12))
+        nx.draw(self.graph, pos, labels=labels, with_labels=True, node_size=7000,
+                node_color='lightblue', font_weight='bold', font_size=8, arrows=False)
+        plt.show()
 
-#     def tree_layout(self, G, root=None, width=1., vert_gap=0.5, vert_loc=0, xcenter=0.5):
-#         """
-#         Positions nodes in a tree layout.
+    def tree_layout(self, G, root=None, width=1., vert_gap=0.5, vert_loc=0, xcenter=0.5):
+        """
+        Positions nodes in a tree layout.
 
-#         Arguments:
-#         ----------
-#         G: networkx.DiGraph
-#             Graph to be positioned
-#         root: node, optional
-#            Root of the tree. Defaults to None (uses the first node)
-#         width: float, optional
-#             Width of the plot. Defaults to 1.
-#         vert_gap: float, optional
-#             Vertical gap between levels of the tree. Defaults to 0.5.
-#         vert_loc: float, optional
-#             Vertical location of root. Defaults to 0.
-#         xcenter: float, optional
-#             Horizontal location of root. Defaults to 0.5.
+        Arguments:
+        ----------
+        G: networkx.DiGraph
+            Graph to be positioned
+        root: node, optional
+           Root of the tree. Defaults to None (uses the first node)
+        width: float, optional
+            Width of the plot. Defaults to 1.
+        vert_gap: float, optional
+            Vertical gap between levels of the tree. Defaults to 0.5.
+        vert_loc: float, optional
+            Vertical location of root. Defaults to 0.
+        xcenter: float, optional
+            Horizontal location of root. Defaults to 0.5.
 
-#         Returns:
-#         --------
-#         pos: dict
-#             A dictionary of positions keyed by node
-#         """
-#         if not nx.is_tree(G):
-#             raise TypeError('cannot use tree_layout on a graph that is not a tree')
+        Returns:
+        --------
+        pos: dict
+            A dictionary of positions keyed by node
+        """
+        if not nx.is_tree(G):
+            raise TypeError('cannot use tree_layout on a graph that is not a tree')
 
-#         if root is None:
-#             root = next(iter(G))  # Default to the first node if no root is provided
+        if root is None:
+            root = next(iter(G))  # Default to the first node if no root is provided
 
-#         def _hierarchy_pos(G, root, width=1., vert_gap=0.5, vert_loc=0, xcenter=0.5,
-#                            pos=None, parent=None, parsed=[]):
-#             """
-#             Recursive helper function for tree_layout.
-#             """
-#             if pos is None:
-#                 pos = {root: (xcenter, vert_loc)}
-#             else:
-#                 pos[root] = (xcenter, vert_loc)
+        def _hierarchy_pos(G, root, width=1., vert_gap=0.5, vert_loc=0, xcenter=0.5,
+                           pos=None, parent=None, parsed=[]):
+            """
+            Recursive helper function for tree_layout.
+            """
+            if pos is None:
+                pos = {root: (xcenter, vert_loc)}
+            else:
+                pos[root] = (xcenter, vert_loc)
 
-#             children = list(G.neighbors(root))
-#             if not isinstance(G, nx.DiGraph) and parent is not None:
-#                 children.remove(parent)  # for undirected graphs
+            children = list(G.neighbors(root))
+            if not isinstance(G, nx.DiGraph) and parent is not None:
+                children.remove(parent)  # for undirected graphs
 
-#             if len(children) != 0:
-#                 dx = width / len(children)
-#                 nextx = xcenter - width / 2 - dx / 2
-#                 for child in children:
-#                     nextx += dx
-#                     pos = _hierarchy_pos(G, child, width=dx, vert_gap=vert_gap,
-#                                          vert_loc=vert_loc - vert_gap, xcenter=nextx,
-#                                          pos=pos, parent=root, parsed=parsed)
-#             return pos
+            if len(children) != 0:
+                dx = width / len(children)
+                nextx = xcenter - width / 2 - dx / 2
+                for child in children:
+                    nextx += dx
+                    pos = _hierarchy_pos(G, child, width=dx, vert_gap=vert_gap,
+                                         vert_loc=vert_loc - vert_gap, xcenter=nextx,
+                                         pos=pos, parent=root, parsed=parsed)
+            return pos
 
-#         return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
+        return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)

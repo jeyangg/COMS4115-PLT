@@ -95,7 +95,7 @@ class Parser:
                 self.advance()
                 args.append(self.parse_expr())
         self.expect(lexer_2.TokenType.DELIMITER, ")")
-        return ast_node.FuncCallNode(method, args)
+        return ast_node.MethodCallNode(method, args)
 
     def parse_element_call(self, obj_name):
         self.expect(lexer_2.TokenType.DELIMITER, "[")
