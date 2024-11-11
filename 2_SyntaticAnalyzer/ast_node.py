@@ -379,7 +379,7 @@ class ASTVisualizer:
     def add_node(self, node, parent_label=None):
         # Create a unique label for each node based on its type and counter
         current_label = f"{type(node).__name__}_{self.node_counter}"
-        label_text = repr(node) if not isinstance(node, (FuncDefNode, BinaryOpNode, DictAssignNode, ReturnNode, IfNode)) else f"{type(node).__name__}"
+        label_text = repr(node) if not isinstance(node, (FuncDefNode, BinaryOpNode, DictAssignNode, WhileNode, ReturnNode, IfNode)) else f"{type(node).__name__}"
         
         # Remove problematic characters from label text
         label_text = label_text.replace(":", " -")
@@ -435,19 +435,9 @@ class ASTVisualizer:
         elif isinstance(node, WhileNode):
             # Add condition node with full condition details
             condition_label = f"Condition_{self.node_counter}"
-            self.graph.add_node(condition_label, label="Condition")
+            self.graph.add_node(condition_label, label=f"Condition\n{node.condition}")
             self.node_counter += 1
             self.graph.add_edge(current_label, condition_label)
-            
-            # Add condition sub-nodes if it's a complex condition
-            if isinstance(node.condition, BinaryOpNode):
-                self.add_node(node.condition, condition_label)
-            else:
-                condition_text = f"{repr(node.condition)}"
-                condition_sub_label = f"ConditionSub_{self.node_counter}"
-                self.graph.add_node(condition_sub_label, label=condition_text)
-                self.node_counter += 1
-                self.graph.add_edge(condition_label, condition_sub_label)
 
             # Add while body statements directly
             for stmt in node.body:

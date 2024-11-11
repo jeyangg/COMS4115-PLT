@@ -52,7 +52,13 @@ class Parser:
                 else:
                     raise SyntaxError("Unexpected top-level token {}".format(token.value))
             elif token.type == lexer_2.TokenType.IDENTIFIER:
-                ast.append(self.parse_assign())
+                identifier = token
+                self.advance()
+                if self.current_token() and self.current_token().type == lexer_2.TokenType.DELIMITER and self.current_token().value == "(":
+                    ast.append(self.parse_func_call(identifier.value))
+                else:
+                    self.position -= 1
+                    ast.append(self.parse_assign())
             elif token.type == lexer_2.TokenType.KEYWORD and token.value == "clear":
                 self.advance()  # Move to the next token after 'clear'
                 continue  # Skip the 'clear' token and continue parsing
@@ -102,13 +108,13 @@ class Parser:
     def parse_func_call(self, func_name):
         self.expect(lexer_2.TokenType.DELIMITER, "(")
         args = []
-        if self.current_token().type != lexer_2.TokenType.DELIMITER or self.current_token().value != ")":
-            args.append(self.parse_expr())  # Parse the first argument
-            while self.current_token().value == ",":
-                self.advance()
-                args.append(self.parse_expr())  # Parse additional arguments
+        while self.current_token() and self.current_token().type != lexer_2.TokenType.DELIMITER:
+            args.append(self.parse_expr())
+            if self.current_token() and self.current_token().value == ",":
+                self.advance()  # Move past the comma
         self.expect(lexer_2.TokenType.DELIMITER, ")")  # Expect closing parenthesis
         return ast_node.FuncCallNode(func_name, args)
+
 
     # Parse Expressions
     def parse_expr(self):
@@ -319,9 +325,9 @@ def main(input_file):
         print("Generated AST:")
         print(ast)
 
-        # for node in ast:
-        #     visualizer.add_node(node)
-        # visualizer.plot()
+        for node in ast:
+            visualizer.add_node(node)
+        visualizer.plot()
 
     except FileNotFoundError:
         print("Error: File '{}' not found.".format(input_file))
