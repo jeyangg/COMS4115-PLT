@@ -9,14 +9,14 @@ by Ella Kim (yk3040) and Je Yang (jy3342)
 - `otherchar` : |!”%&/()=+-*#><;,^.][\n \t
 - `char`      : letter | otherchar | digit0
 
-- int`       : '0' | digit+digit0*
-- float`     : digit0+ '.' digit0+
-- num`       : ('-')?(float | int)
-- bool`      : 'True' | '진실' | 'False' | '거짓'
-- null`      : 'NULL' | '널'
-- var`       : letter ([[_digit0*] | [_letter]])*
-- qString`   : '"' (char)* '"'
-- commentLine`   : '#' (char)*
+- `int`       : '0' | digit+digit0*
+- `float`     : digit0+ '.' digit0+
+- `num`       : ('-')?(float | int)
+- `bool`      : 'True' | '진실' | 'False' | '거짓'
+- `null`      : 'NULL' | '널'
+- `var`       : letter ([[_digit0*] | [_letter]])*
+- `qString`   : '"' (char)* '"'
+- `commentLine`   : '#' (char)*
 
 - `obj`       : var | num | qString | bool | null | list | listElem
 
@@ -65,13 +65,13 @@ by Ella Kim (yk3040) and Je Yang (jy3342)
 The HANA parser uses **Recursive Descent Parsing** as a parsing algorithm. 
 ### 1. Tokenization
 `lexer_2.py` tokenizes the input source file and into token type like keywords, identifiers, literals, operators, etc. 
-Comments are ignored during this process.
 
 ### 2. Parsing Functions
 The HANA parser iterates `parse()` over all tokens, delegating the actual parsing to more specific functions. The parser employs recursive descent, meaning that each type of expression or statement can call other parsing functions as needed. For example,
 - Function Calls: Recursive descent occurs in functions like `parse_func_call()`, where arguments are recursively parsed using `parse_expr()`. This allows the parser to handle nested function calls or expressions as arguments, supporting complex program structures.
 
 - Conditional Statements: The `parse_if()` function calls `parse_expr()` to handle the condition, and then recursively processes the body of the if statement. Similarly, `parse_while()` processes while loop conditions and bodies recursively.
+  
 Note that comment (#) is ignored during the parsing.
 
 ### 3. AST Construction
@@ -88,7 +88,7 @@ The HANA parser uses `expect()` function to check whether the current token matc
 The HANA parser adds `ErrorNode` to the AST where the error is detected. The ErrorNode includes information about the error message and the expected context, providing context within the visualized AST. 
 
 ### 3. Syntatic Error Example
-- Unterminated string: "String should opend and closed with "
+- Unterminated string: "String should opened and closed with "
 - Unmatched delimiter: [ } or function opened with [ ]
 - Invalid number: 5..5 or 5.
 
