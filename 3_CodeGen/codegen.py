@@ -33,24 +33,33 @@ class MIPSCodeGenerator:
         return self.variable_stack[var_name]
  
     def process_ast(self, node):
+        if isinstance(node, ast_node.ErrorNode):
+            # If an ErrorNode is encountered, stop code generation
+            self.code.append(f"# Error encountered: {node.message}")
+            return False
+
         if isinstance(node, ast_node.FuncDefNode):
             self.code.append(f"\n# Function {node.name}")
             self.code.append(f"{node.name}:")
             for stmt in node.body:
-                self.process_ast(stmt)
+                if not self.process_ast(stmt):
+                    return False
             self.code.append("jr $ra  # Return from function")
 
         elif isinstance(node, ast_node.AssignNode):
             # Allocate space on the stack for the variable
             self.allocate_stack(node.var.name)
-            self.process_ast(node.expr)
+            if not self.process_ast(node.expr):
+                return False
             stack_offset = self.get_stack_offset(node.var.name)
             self.code.append(f"sw $v0, {stack_offset}($sp)  # Store {node.var.name}")
 
         elif isinstance(node, ast_node.BinaryOpNode):
-            self.process_ast(node.left)
+            if not self.process_ast(node.left):
+                return False
             self.code.append("move $t1, $v0  # Save left operand")
-            self.process_ast(node.right)
+            if not self.process_ast(node.right):
+                return False
             if node.operator == "+":
                 self.code.append("add $v0, $t1, $v0")
             elif node.operator == "-":
@@ -71,7 +80,7 @@ class MIPSCodeGenerator:
                 self.code.append("sgt $v0, $t1, $v0")
             elif node.operator == ">=":
                 self.code.append("sge $v0, $t1, $v0")
-       
+
         elif isinstance(node, ast_node.NumberNode):
             self.code.append(f"li $v0, {node.value}")
 
@@ -80,23 +89,27 @@ class MIPSCodeGenerator:
             self.code.append(f"lw $v0, {stack_offset}($sp)  # Load {node.name}")
 
         elif isinstance(node, ast_node.PrintNode):
-            self.process_ast(node.expr)
+            if not self.process_ast(node.expr):
+                return False
             self.code.append("move $a0, $v0  # Move value to $a0 for printing")
             self.code.append("li $v0, 1  # Print integer syscall")
             self.code.append("syscall")
 
         elif isinstance(node, ast_node.IfNode):
-            self.process_ast(node.condition)
+            if not self.process_ast(node.condition):
+                return False
             false_label = self.generate_label("false")
             self.code.append(f"beq $v0, $zero, {false_label}  # If condition is false, jump")
             for stmt in node.body:
-                self.process_ast(stmt)
+                if not self.process_ast(stmt):
+                    return False
             if node.else_body:
                 end_label = self.generate_label("end")
                 self.code.append(f"j {end_label}  # Jump to end after true block")
                 self.code.append(f"{false_label}:")
                 for stmt in node.else_body:
-                    self.process_ast(stmt)
+                    if not self.process_ast(stmt):
+                        return False
                 self.code.append(f"{end_label}:")
             else:
                 self.code.append(f"{false_label}:")
@@ -105,12 +118,16 @@ class MIPSCodeGenerator:
             start_label = self.generate_label("start")
             end_label = self.generate_label("end")
             self.code.append(f"{start_label}:")
-            self.process_ast(node.condition)
+            if not self.process_ast(node.condition):
+                return False
             self.code.append(f"beq $v0, $zero, {end_label}")
             for stmt in node.body:
-                self.process_ast(stmt)
+                if not self.process_ast(stmt):
+                    return False
             self.code.append(f"j {start_label}")
             self.code.append(f"{end_label}:")
+        return True
+
     def get_code(self):
         return "\n".join(self.code)
   
@@ -129,14 +146,15 @@ class Pipeline:
 
         # Step 3: Code Generation
         for node in ast:
-            self.generator.process_ast(node)
+            if not self.generator.process_ast(node):
+                break
 
         # Step 4: Output the generated code
         generated_code = self.generator.get_code()
 
         with open(self.output_filename, "w") as output_file:
             output_file.write(generated_code)
-        print("Generated MIPS code saved to output.asm")
+        print(f"Generated MIPS code saved to {self.output_filename}")
 
 
 if __name__ == "__main__":
