@@ -1,6 +1,7 @@
 import sys
-import ast_node
 import lexer_2
+import ast_node
+from parser import Parser
 
 class MIPSCodeGenerator:
     def __init__(self):
@@ -76,16 +77,13 @@ class Pipeline:
     def __init__(self, source_code):
         self.source_code = source_code
         self.lexer = lexer_2.Lexer()
-        self.parser = None
         self.generator = MIPSCodeGenerator()
 
     def process(self):
         # Step 1: Lexical Analysis
-        tokens = self.lexer.tokenize(self.source_code)
-        self.parser = Parser(tokens)
-
         # Step 2: Syntactic Analysis
-        ast = self.parser.parse()
+        parser = Parser(self.source_code)
+        ast = parser.parse()
 
         # Step 3: Code Generation
         for node in ast:
