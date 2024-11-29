@@ -1,5 +1,6 @@
-import pdb
+import os
 import sys
+import pdb
 import re
 
 import lexer_2
@@ -130,12 +131,11 @@ class MIPSCodeGenerator:
         self.process_ast(node.value)
         self.code.append(f"sw $v0, 0($t2)  # Store value in dictionary")
 
-    def process_ast(self, node):
-        if isinstance(node, ast_node.ErrorNode):
-            # If an ErrorNode is encountered, stop code generation
-            self.code.append(f"# Error encountered: {node.message}")
-            return False
+    def handle_error_node(self, node):
+        self.code.append(f"# Error encountered: {node.message}")
+        return False
 
+    def process_ast(self, node):
         if isinstance(node, ast_node.FuncDefNode):
             self.handle_func_def_node(node)
         elif isinstance(node, ast_node.AssignNode):
@@ -156,11 +156,18 @@ class MIPSCodeGenerator:
             self.handle_dict_node(node)
         elif isinstance(node, ast_node.DictAssignNode):
             self.handle_dict_assign_node(node)
+        elif isinstance(node, ast_node.ErrorNode):
+            self.handle_error_node(node)
 
     def get_code(self):
         # Combine .data and .text sections
         data_section = "\n".join(self.data_section)
-        text_section = "\n".join(self.code)
+        text_section_lines = []
+        for line in self.code:
+            text_section_lines.append(line)
+            if "# Error encountered" in line:
+                break
+        text_section = "\n".join(text_section_lines)
         return f".data\n{data_section}\n\n.text\n.globl main\n{text_section}"
 
 class Pipeline:
@@ -177,12 +184,14 @@ class Pipeline:
 
         # Step 3: Code Generation
         for node in ast:
-            if not self.generator.process_ast(node):
-                break
+            self.generator.process_ast(node)
+
+        output_dir = os.path.dirname(self.output_filename)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         # Step 4: Output the generated code
         generated_code = self.generator.get_code()
-
         with open(self.output_filename, "w") as output_file:
             output_file.write(generated_code)
         print(f"Generated MIPS code saved to {self.output_filename}")
