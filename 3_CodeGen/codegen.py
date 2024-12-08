@@ -167,6 +167,39 @@ class MIPSCodeGenerator:
             self.list_map[node.name] = label
             self.data_section.append(f"{label}: .space 400")
 
+    def handle_method_node(self, node):
+        if node.method == "추가":
+            list_label = next(iter(self.list_map))
+            self.code.append(f"la $t0, {list_label}")
+            self.code.append("addi $t1, $zero, 0")
+            self.code.append("loop:")
+            self.code.append("lw $t2, 0($t0)")
+            self.code.append("beq $t2, $zero, end_loop")
+            self.code.append("addi $t0, $t0, 4")
+            self.code.append("j loop")
+            self.code.append("end_loop:")
+            self.process_ast(node.args)
+            self.code.append("sw $v0, 0($t0)")
+
+        elif node.method == "뽑기":
+            list_label = next(iter(self.list_map))
+            # Load base address of the list
+            self.code.append(f"la $t0, {list_label}")
+            self.code.append("addi $t1, $zero, 0")
+
+            # Traverse to the last element
+            self.code.append("pop_loop:")
+            self.code.append("lw $t2, 0($t0)")
+            self.code.append("beq $t2, $zero, pop_end")
+            self.code.append("addi $t1, $t0, 0")
+            self.code.append("addi $t0, $t0, 4")
+            self.code.append("j pop_loop")
+
+            # Pop the last element
+            self.code.append("pop_end:")
+            self.code.append("lw $v0, 0($t1)")
+            self.code.append("sw $zero, 0($t1)")
+
     def handle_error_node(self, node):
         self.code.append(f"# Error encountered: {node.message}")
         return False
@@ -195,6 +228,8 @@ class MIPSCodeGenerator:
             self.handle_dict_assign_node(node)
         elif isinstance(node, ast_node.ListNode):
             self.handle_list_node(node)
+        elif isinstance(node, ast_node.MethodCallNode):
+            self.handle_method_node(node)
         elif isinstance(node, ast_node.ErrorNode):
             self.handle_error_node(node)
 			
