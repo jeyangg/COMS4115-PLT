@@ -1,3 +1,5 @@
+import re
+import os
 import sys
 import lexer_2
 import ast_node
@@ -245,10 +247,10 @@ class MIPSCodeGenerator:
         return f".data\n{data_section}\n\n.text\n.globl main\n{text_section}"
 
 class Pipeline:
-    def __init__(self, source_code):
-        self.source_code = source_code
-        self.lexer = lexer_2.Lexer()
+    def __init__(self, source_code, output_filename):
         self.generator = MIPSCodeGenerator()
+        self.source_code = source_code
+        self.output_filename = output_filename
 
     def process(self):
         # Step 1: Lexical Analysis
@@ -260,11 +262,15 @@ class Pipeline:
         for node in ast:
             self.generator.process_ast(node)
 
+        output_dir = os.path.dirname(self.output_filename)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
         # Step 4: Output the generated code
         generated_code = self.generator.get_code()
-        with open("output.asm", "w") as output_file:
+        with open(self.output_filename, "w") as output_file:
             output_file.write(generated_code)
-        print("Generated MIPS code saved to output.asm")
+        print(f"Generated MIPS code saved to {self.output_filename}")
 
 
 if __name__ == "__main__":
@@ -276,5 +282,13 @@ if __name__ == "__main__":
     with open(input_file, "r", encoding="utf-8") as f:
         source_code = f.read()
 
-    pipeline = Pipeline(source_code)
+    # Extract sample number from input filename
+    match = re.search(r'sample(\d+)\.txt$', input_file)
+    if match:
+        sample_number = match.group(1)
+        output_filename = f"samples_output/output{sample_number}.asm"
+    else:
+        output_filename = "samples_output/output.asm"  # Default output name if no sample number is found
+
+    pipeline = Pipeline(source_code, output_filename)
     pipeline.process()

@@ -1,11 +1,11 @@
-lw $v0, x
-move $t1, $v0
-li $v0, 10
-beq $v0, $zero, false_0
-li $v0, 1  # Print integer syscall
+.data
+
+
+.text
+.globl main
+li $a0, 10
+sw $v0, 0($sp)
+lw $v0, 0($sp)
+move $a0, $v0
+li $v0, 1
 syscall
-j end_1
-false_0:
-li $v0, 1  # Print integer syscall
-syscall
-end_1:
