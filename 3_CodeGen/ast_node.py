@@ -261,17 +261,21 @@ class DictAssignNode:
     
 # List and Elements
 class ListNode(ASTNode):
-    def __init__(self, elements):
+    def __init__(self, name, elements=None):
+        self.name = name
         self.elements = elements
 
     def _repr(self, indent):
         indent_str = "    " * indent
         return (
             "{}ListNode(\n"
+            "{}    name={}\n"
             "{}    elements=[\n{}\n{}    ]\n"
             "{})"
         ).format(
             indent_str,
+            indent_str,
+            self.name,
             indent_str,
             self.elements,
             indent_str,
