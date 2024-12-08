@@ -23,6 +23,19 @@ x = 10
 출력(x)                                              
 ```
 **Output code**
+```
+.data
+
+
+.text
+.globl main
+li $a0, 10
+sw $v0, 0($sp)
+lw $v0, 0($sp)
+move $a0, $v0
+li $v0, 1
+syscall
+```
 
 ### Sample 2
 **Input file**
@@ -36,6 +49,29 @@ x = 5
 }
 ```
 **Output code**
+```
+.data
+
+
+.text
+.globl main
+li $a0, 54
+sw $v0, 0($sp)
+lw $v0, 0($sp)
+move $t1, $v0
+li $a0, 10
+seq $v0, $t1, $v0
+beq $v0, $zero, false_0
+move $a0, $v0
+li $v0, 1
+syscall
+j end_1
+false_0:
+move $a0, $v0
+li $v0, 1
+syscall
+end_1:
+```
 
 ### Sample 3
 **Input file**
@@ -59,7 +95,29 @@ x = 5
 출력(연산기.키())
 ```
 **Output code**
+```
+.data
+딕셔너리_연산기: .space 400
 
+.text
+.globl main
+더하기:
+addi $sp, $sp, -4
+sw $ra, 0($sp)
+lw $v0, 0($sp)
+sll $t0, $v0, 2
+la $t1, 딕셔너리_연산기
+add $t2, $t0, $t1
+lw $v0, 0($sp)
+move $t1, $v0
+lw $v0, -4($sp)
+add $v0, $t1, $v0
+sw $v0, 0($t2)
+lw $ra, 0($sp)
+addi $sp, $sp, 4
+jr $ra          
+#Error encountered: Unexpected function open
+```
 
 ### Sample 4
 **Input file**
@@ -75,6 +133,49 @@ x = 4
 아이디_원소_0 = 아이디.뽑기()
 ```
 **Output Code**
+```
+.data
+리스트_아이디: .space 400
+
+.text
+.globl main
+li $a0, 4
+sw $v0, 0($sp)
+start_0:
+lw $v0, 0($sp)
+move $t1, $v0
+li $a0, 5
+slt $v0, $t1, $v0
+beq $v0, $zero, end_1
+lw $v0, 0($sp)
+move $t1, $v0
+li $a0, 1
+add $v0, $t1, $v0
+sw $v0, 0($sp)
+la $t0, 아이디
+addi $t1, $zero, 0
+loop:
+lw $t2, 0($t0)
+beq $t2, $zero, end_loop
+addi $t0, $t0, 4
+j loop
+end_loop:
+sw $v0, 0($t0)
+j start_0
+end_1:
+la $t0, 아이디
+addi $t1, $zero, 0
+pop_loop:
+lw $t2, 0($t0)
+beq $t2, $zero, pop_end
+addi $t1, $t0, 0
+addi $t0, $t0, 4
+j pop_loop
+pop_end:
+lw $v0, 0($t1)
+sw $zero, 0($t1)
+sw $v0, -4($sp)
+```
 
 ### Sample 5
 **Input file**
@@ -116,6 +217,60 @@ x = 4
 문자열_테스트 = "이것은 바뀐 문자열입니다.'
 ```
 **Output code**
+```
+.data
+
+
+.text
+.globl main
+피보나치:
+addi $sp, $sp, -4
+sw $ra, 0($sp)
+lw $v0, 0($sp)
+move $t1, $v0
+li $a0, 1
+sle $v0, $t1, $v0
+beq $v0, $zero, false_0
+j end_1
+false_0:
+end_1:
+lw $ra, 0($sp)
+addi $sp, $sp, 4
+jr $ra          
+주요_함수:
+addi $sp, $sp, -4
+sw $ra, 0($sp)
+li $a0, 10
+sw $v0, -4($sp)
+li $a0, 5.5
+sw $v0, -8($sp)
+sw $v0, -12($sp)
+sw $v0, -16($sp)
+lw $v0, -12($sp)
+move $t1, $v0
+seq $v0, $t1, $v0
+move $t1, $v0
+lw $v0, -20($sp)
+move $t1, $v0
+lw $v0, -4($sp)
+slt $v0, $t1, $v0
+beq $v0, $zero, false_2
+move $a0, $v0
+li $v0, 1
+syscall
+j end_3
+false_2:
+move $a0, $v0
+li $v0, 1
+syscall
+end_3:
+li $a0, 0
+sw $v0, -24($sp)
+start_4:
+lw $v0, -24($sp)
+move $t1, $v0
+#Error encountered: Invalid number format
+```
 
 ## 4. Video
 Link here: 
