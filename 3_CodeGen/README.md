@@ -40,7 +40,7 @@ syscall
 ### Sample 2
 **Input file**
 ```
-x = 5
+x = 54
 만약에 x == 10 {
     출력("x는 10입니다.")
 }
