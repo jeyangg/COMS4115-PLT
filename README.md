@@ -5,6 +5,8 @@ Hana - Language for translating all syntax and commands are expressed in the Kor
 
 **Please `cd 2_SyntaticAnalyzer` or direct to `2_SyntaticAnalyzer` directory for Readme on Parser.** 
 
+**Please `cd 3_CodeGen` or direct to `3_CodeGen` directory for Readme on Code Generation.** 
+
 ## Token Types
 
 ### 1. **Keyword Tokens**  
